@@ -1,0 +1,6 @@
+# MacLean 报告
+
+记录类型：receipt
+完整扫描：不适用
+
+\{   "kind": "receipt",   "schema\_version": 1,   "plan": "7cd7103db9cb991709f14f6d98501829ba96ff28aaacc5b7a826045c70cfb4a4",   "created": 1792378258\.211329,   "approval": \{     "digest": "7cd7103db9cb991709f14f6d98501829ba96ff28aaacc5b7a826045c70cfb4a4",     "confirmed\_at": 1792378258\.207245,     "expires": 1792380054\.430753,     "channel": "macOS\_native\_dialog",     "proof": "0dcd8e7b663b8835041e051835cc24de410e73d6388bf7ba1f66e81f2b18e230"   \},   "results": \[     \{       "target\_id": "5645e9e31b90f193d120",       "path": "/private/var/folders/qp/\_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean\-acceptance\-00ilwrou/home/Library/Caches/Fixture/generated\-cache\.bin",       "logical\_bytes": 28672,       "allocated\_bytes": 28672,       "status": "completed"     \}   \],   "target\_processed\_logical\_bytes": 28672,   "residual\_inventory\_logical\_bytes": 0,   "volumes": \{     "16777233": \{       "path": "/private/var/folders/qp/\_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean\-acceptance\-00ilwrou/home/Library/Caches/Fixture",       "free\_before": 26491346944,       "free\_after": 26491367424,       "free\_delta": 20480     \}   \},   "space\_note": "卷空闲变化含并发写入、开放句柄和快照影响，不等于删除量。" \}

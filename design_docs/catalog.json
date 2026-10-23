@@ -1,0 +1,3081 @@
+{
+  "schema_version": 1,
+  "catalog_version": "1.0.0",
+  "title": "MacLean 开发基准第二部分：扫描目标与规则",
+  "reviewed_on": "2026-10-19",
+  "purpose": "development_baseline_not_current_runtime_configuration",
+  "platform": "macOS",
+  "roots": {
+    "HOME": {
+      "default": "macOS 当前执行用户的主目录",
+      "resolution": "Mac 端 pwd.getpwuid(os.getuid()).pw_dir；不使用网页云容器 HOME；禁止以 root 代替用户运行。"
+    },
+    "SUPPORT": {
+      "default": "${HOME}/Library/Application Support",
+      "resolution": "固定相对于 Mac HOME，不接受整体覆盖；自定义 userdata 需开发时增加 app_id/绝对根绑定及用例，不能把单个应用根误当整个 SUPPORT。"
+    },
+    "CODEX_HOME": {
+      "default": "${HOME}/.codex",
+      "resolution": "显式 --root-map > 本次 Mac 进程的 CODEX_HOME（只读取此键）> 默认。"
+    },
+    "CLAUDE_HOME": {
+      "default": "${HOME}/.claude",
+      "resolution": "显式 --root-map > CLAUDE_CONFIG_DIR（只读取此键）> 默认。"
+    },
+    "CLAUDE_VERSIONS": {
+      "default": "${HOME}/.local/share/claude/versions",
+      "resolution": "默认位置或显式登记；不依据 CLAUDE_CONFIG_DIR 改变二进制位置。"
+    },
+    "PROJECT": {
+      "default": null,
+      "resolution": "用户选定根下发现的项目；最多深度 6、50000 条目、180 秒；排除环境/安装/版本控制目录。多 manifest 同一目录只登记一次。"
+    },
+    "NEXT_DIST": {
+      "default": "${PROJECT}/.next",
+      "resolution": "每项目显式 root-map 可覆盖；不执行 next.config.js/ts；默认不存在时报告可能为未构建/自定义路径，不能猜测全盘。"
+    },
+    "CARGO_BUILD": {
+      "default": "${PROJECT}/target",
+      "resolution": "每项目显式 root-map 可覆盖实际 build-dir；不将所有 target 当垃圾；workspace 根必须是用户选定范围。"
+    },
+    "PYTEST_CACHE": {
+      "default": "${PROJECT}/.pytest_cache",
+      "resolution": "每项目显式 root-map 覆盖 cache_dir，不导入 conftest 或运行测试。"
+    },
+    "RUFF_CACHE": {
+      "default": "${PROJECT}/.ruff_cache",
+      "resolution": "每项目显式 root-map 覆盖实际 cache-dir；不猜配置继承，不运行用户 Python。"
+    },
+    "NPM_CACHE": {
+      "default": "${HOME}/.npm",
+      "resolution": "由现有 npm 的 npm config get cache 查询，或显式指定 --cache；默认值只作工具不可用时的只读发现。查询在临时空工作目录运行。"
+    },
+    "UV_CACHE": {
+      "default": "${HOME}/.cache/uv",
+      "resolution": "由现有 uv cache dir 查询，或显式指定 --cache-dir；默认及 ~/Library/Caches/uv 仅作只读备用入口，不能假定 Mac 一定使用 Library。"
+    },
+    "PLAYWRIGHT_CACHE": {
+      "default": "${HOME}/Library/Caches/ms-playwright",
+      "resolution": "显式 root-map > PLAYWRIGHT_BROWSERS_PATH 的绝对路径 > 默认；值 0 表示包内安装，不展开为 /0，首版不清。"
+    },
+    "PUPPETEER_CACHE": {
+      "default": "${HOME}/.cache/puppeteer",
+      "resolution": "显式 root-map > PUPPETEER_CACHE_DIR > 默认；不执行 .puppeteerrc.js。"
+    }
+  },
+  "sources": {
+    "apple-library": {
+      "kind": "official-doc",
+      "url": "https://developer.apple.com/library/archive/documentation/FileManagement/Conceptual/FileSystemProgrammingGuide/MacOSXDirectories/MacOSXDirectories.html",
+      "note": "Caches 可再生成；Logs 是日志；Application Support 可以包含用户数据。",
+      "reviewed_on": "2026-10-19"
+    },
+    "electron-paths": {
+      "kind": "official-doc",
+      "url": "https://www.electronjs.org/docs/latest/api/app#appgetpathname",
+      "note": "sessionData 混合缓存与持久状态，不能清空整个 profile。",
+      "reviewed_on": "2026-10-19"
+    },
+    "chromium-paths": {
+      "kind": "official-source",
+      "url": "https://chromium.googlesource.com/chromium/src/+/HEAD/docs/user_data_dir.md",
+      "note": "macOS profile 与用户缓存目录的对应关系；HEAD 链接仅表示本次审阅内容。",
+      "reviewed_on": "2026-10-19"
+    },
+    "vscode-vsix": {
+      "kind": "maintainer-test-plan",
+      "url": "https://github.com/microsoft/vscode/issues/99873",
+      "note": "维护者验证 CachedExtensionVSIXs 下载副本；不是已安装扩展目录。",
+      "reviewed_on": "2026-10-19"
+    },
+    "vscode-environment": {
+      "kind": "official-source",
+      "url": "https://github.com/microsoft/vscode/blob/main/src/vs/platform/environment/common/environmentService.ts",
+      "note": "logs 与 CachedExtensionVSIXs 位于 userdata；User/globalStorage 为持久状态。本次审阅 main。",
+      "reviewed_on": "2026-10-19"
+    },
+    "vscode-code-cache": {
+      "kind": "official-source",
+      "url": "https://github.com/microsoft/vscode/blob/main/src/mainImpl.ts",
+      "note": "getCodeCachePath 返回 userdata/CachedData/commit。本次审阅 main。",
+      "reviewed_on": "2026-10-19"
+    },
+    "mole-caches": {
+      "kind": "cross-check",
+      "url": "https://github.com/tw93/Mole/blob/7f83db8a97f4ab754887176b6f7d22c14e955fba/lib/clean/app_caches.sh",
+      "note": "交叉核对具体叶目录；不是所有第三方软件的数据语义保证。",
+      "reviewed_on": "2026-10-19"
+    },
+    "mole-exceptions": {
+      "kind": "cross-check",
+      "url": "https://github.com/tw93/Mole/blob/7f83db8a97f4ab754887176b6f7d22c14e955fba/lib/core/base.sh",
+      "note": "辅助发现特殊缓存域；例外归为产品边界，不声称全部有 Apple 的删除禁止规定。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-log": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/tui/src/lib.rs",
+      "note": "remove_legacy_tui_log_file 删除 log/codex-tui.log，考虑已有打开句柄。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-models": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/models-manager/src/manager.rs",
+      "note": "models_cache.json 是模型目录缓存；不等于服务端 KV 缓存。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-client": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/core/src/client.rs",
+      "note": "prompt_cache_key 和会话元数据参与请求；不能将普通本地文件与服务端缓存混同。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-arg0": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/arg0/src/lib.rs",
+      "note": "tmp/arg0-macos；持有 .lock 的命令入口；清理先加锁再退休目录。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-snapshot": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/core/src/shell_snapshot.rs",
+      "note": "shell_snapshots 的生成与清理生命周期；当前会话不在原生过期清理范围内。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-install": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/scripts/install/install.sh",
+      "note": "packages/standalone、app-server-daemon、releases、current 与安装锁。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-pruning": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/app-server-daemon/src/release_pruning.rs",
+      "note": "daemon 退休依赖选择历史、运行实例和生命周期/安装锁。",
+      "reviewed_on": "2026-10-19"
+    },
+    "codex-stage": {
+      "kind": "official-source",
+      "url": "https://github.com/openai/codex/blob/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/app-server-daemon/src/prepare_install.rs",
+      "note": "daemon releases/.staging.* 是发布前安装区。",
+      "reviewed_on": "2026-10-19"
+    },
+    "claude-env": {
+      "kind": "official-doc",
+      "url": "https://code.claude.com/docs/en/env-vars",
+      "note": "配置根可调整；调试日志默认 ~/.claude/debug/<session-id>.txt；debug 日志覆盖变量实际是文件路径。",
+      "reviewed_on": "2026-10-19"
+    },
+    "claude-install": {
+      "kind": "official-doc",
+      "url": "https://code.claude.com/docs/en/setup",
+      "note": "原生 launcher 指向 versions；保留当前、正在运行及最新两版，自定义 launcher 不自动推断。",
+      "reviewed_on": "2026-10-19"
+    },
+    "next-cache": {
+      "kind": "official-doc",
+      "url": "https://nextjs.org/docs/app/guides/ci-build-caching",
+      "note": "默认 .next/cache 为构建缓存。",
+      "reviewed_on": "2026-10-19"
+    },
+    "next-fetch-cache": {
+      "kind": "official-source",
+      "url": "https://github.com/vercel/next.js/blob/canary/packages/next/src/server/lib/incremental-cache/file-system-cache.ts",
+      "note": "fetch 响应持久化到 .next/cache/fetch-cache；可能包含业务/API 结果，不与编译缓存一并清理。本次审阅 canary。",
+      "reviewed_on": "2026-10-19"
+    },
+    "cargo-cache": {
+      "kind": "official-doc",
+      "url": "https://doc.rust-lang.org/cargo/reference/build-cache.html",
+      "note": "incremental 在 build-dir；build-dir/target-dir 可配置，内部布局可变化。",
+      "reviewed_on": "2026-10-19"
+    },
+    "python-bytecode": {
+      "kind": "official-doc",
+      "url": "https://docs.python.org/3/library/py_compile.html",
+      "note": "编译缓存的 __pycache__ 路径；源文件关系必须保留。",
+      "reviewed_on": "2026-10-19"
+    },
+    "pytest-cache": {
+      "kind": "official-doc",
+      "url": "https://docs.pytest.org/en/stable/how-to/cache.html",
+      "note": "cacheprovider 同时支持内置结果和插件自定义 cache，因此只清内置键，未知插件键需调查费用。",
+      "reviewed_on": "2026-10-19"
+    },
+    "ruff-cache": {
+      "kind": "official-doc",
+      "url": "https://docs.astral.sh/ruff/settings/#cache-dir",
+      "note": "默认 .ruff_cache；配置及环境可改变位置。",
+      "reviewed_on": "2026-10-19"
+    },
+    "npm-cache": {
+      "kind": "official-doc",
+      "url": "https://docs.npmjs.com/cli/v11/commands/npm-cache/",
+      "note": "npm 内容缓存和 npx 维护接口；能力需以本机版本核实。",
+      "reviewed_on": "2026-10-19"
+    },
+    "uv-cache": {
+      "kind": "official-doc",
+      "url": "https://docs.astral.sh/uv/concepts/cache/",
+      "note": "必须采用 uv cache clean 协调，不直接改内部桶。",
+      "reviewed_on": "2026-10-19"
+    },
+    "playwright": {
+      "kind": "official-doc",
+      "url": "https://playwright.dev/docs/browsers",
+      "note": "macOS 浏览器下载目录及覆盖设置；下载产物不是个人浏览器 profile。",
+      "reviewed_on": "2026-10-19"
+    },
+    "puppeteer": {
+      "kind": "official-doc",
+      "url": "https://pptr.dev/guides/configuration",
+      "note": "默认 ~/.cache/puppeteer，可配置。",
+      "reviewed_on": "2026-10-19"
+    },
+    "puppeteer-cache-source": {
+      "kind": "official-source",
+      "url": "https://github.com/puppeteer/puppeteer/blob/main/packages/browsers/src/Cache.ts",
+      "note": "目录为 browser/platform-buildId；uninstall 同步更新 .metadata 中的别名和 executablePaths。本次审阅 main。",
+      "reviewed_on": "2026-10-19"
+    },
+    "puppeteer-chrome-source": {
+      "kind": "official-source",
+      "url": "https://github.com/puppeteer/puppeteer/blob/main/packages/browsers/src/browser-data/chrome.ts",
+      "note": "Mac Chrome for Testing 可执行文件布局。本次审阅 main。",
+      "reviewed_on": "2026-10-19"
+    },
+    "puppeteer-shell-source": {
+      "kind": "official-source",
+      "url": "https://github.com/puppeteer/puppeteer/blob/main/packages/browsers/src/browser-data/chrome-headless-shell.ts",
+      "note": "Mac headless shell 可执行文件布局。本次审阅 main。",
+      "reviewed_on": "2026-10-19"
+    },
+    "puppeteer-firefox-source": {
+      "kind": "official-source",
+      "url": "https://github.com/puppeteer/puppeteer/blob/main/packages/browsers/src/browser-data/firefox.ts",
+      "note": "Firefox.app / Firefox Nightly.app 可执行文件布局。本次审阅 main。",
+      "reviewed_on": "2026-10-19"
+    },
+    "live-layouts": {
+      "kind": "local-observation",
+      "url": null,
+      "note": "2026-10-18 本机只读测试：Codex runtime install 目录含 payload/ 和 node-runtime.tar.xz；Cursor agent-worker versions 父级没有 current 链接。观察不证明可删。",
+      "reviewed_on": "2026-10-19"
+    },
+    "product-boundary": {
+      "kind": "product-policy",
+      "url": null,
+      "note": "用户约定：不删唯一内容、工具安装或产生额外模型费用的数据；本地下载/编译成本可接受。",
+      "reviewed_on": "2026-10-19"
+    }
+  },
+  "facts": {
+    "chromium_layout": "缓存目标的应用 profile 根有至少两个独立非链接目录：Code Cache/GPUCache/ShaderCache/GrShaderCache/DawnCache/GraphiteDawnCache/DawnGraphiteCache/DawnWebGPUCache；只凭名字不通过。",
+    "editor_layout": "明确已安装的 Code/Code - Insiders/VSCodium（或已登记同布局产品）；目标在其已登记 userdata 根，User 目录存在且非链接；不得执行该应用。",
+    "browser_profile": "profile 名必须为 Default/Guest Profile/System Profile 或完整匹配 Profile [0-9]+；并通过 chromium_layout。",
+    "next_project": "同一 PROJECT 的 package.json dependencies/devDependencies 含 next；只读取这些字段，文件上限 1 MiB。",
+    "rust_project": "PROJECT/Cargo.toml 是非链接文件；不执行 build.rs。",
+    "python_project": "PROJECT 中有 pyproject.toml/setup.cfg/setup.py/requirements.txt 之一；仅判断存在。",
+    "python_source_pair": "按 importlib.util.source_from_cache 的命名关系，将每个 .pyc 对应到现存非链接 .py；不存在源码的 bytecode 不入清单。",
+    "project_untracked": "仅查询所选叶项的 git ls-files；若被跟踪则保留该项；非 Git 项目通过，Git 查询失败则待调查；项目其他修改无关。",
+    "cache_tag": "目标缓存根 CACHEDIR.TAG 为非链接文件且前 43 字节是 Signature: 8a477f597d28d172789f06886806bc55；不读取其他内容。",
+    "ruff_layout": "根只含 CACHEDIR.TAG/.gitignore 与数字点分版本目录；未知顶层条目分开报告，不授权未知子树。",
+    "native_domain_verified": "原生程序给出的绝对缓存域与封存根一致；安全路径检查通过，根不是 HOME、/、源码/凭据目录。",
+    "native_supported": "已安装工具的 --version/--help 确认指定命令与根参数可用；禁止临时下载 npm 包来获得命令。",
+    "playwright_layout": "version 名匹配 (chromium|chromium_headless_shell|firefox|webkit|ffmpeg)-[0-9]+；有普通 INSTALLATION_COMPLETE 文件。",
+    "puppeteer_layout": "产品 chrome/chrome-headless-shell/firefox，版本目录完整匹配 mac(_arm)?-[A-Za-z0-9._-]+；Chrome 为 chrome-mac-{x64|arm64}/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing，headless shell 为 chrome-headless-shell-mac-{x64|arm64}/chrome-headless-shell，Firefox 为 Firefox.app/Contents/MacOS/firefox 或 Firefox Nightly.app/Contents/MacOS/firefox。架构须与 mac/mac_arm 相符；可执行文件必须在该副本内。产品 .metadata 上限 1 MiB，只接受 aliases/executablePaths 的字符串映射；可执行文件重定向至副本外或未知格式不通过。",
+    "claude_launcher": "仅允许 readlink 读取 ~/.local/bin/claude 元数据；目标严格落在 CLAUDE_VERSIONS 下，是签名可验证的普通 Mach-O 文件；自定义 launcher/脚本或无法确认厂商的二进制不通过。",
+    "claude_obsolete": "版本名是完整数字 semver；同一根按 semver 排序，排除 launcher 当前目标和最新两个有效版本；非候选版本单独保留。",
+    "local_volume": "以目标卷的系统属性确认本地卷；旧运行时若位于网络/未知卷则等待人工指定生命周期，不自动清。"
+  },
+  "protocols": {
+    "online_inventory": "封存普通文件清单；保持目录；执行时复核文件及祖先身份；新/修改文件不删；不打开日志正文；独立特殊文件跳过。",
+    "project_cache": "与 online_inventory 相同；对本次明确活动构建的写入叶项等待结束，其他独立缓存继续；不检查整个项目是否干净。",
+    "native_npm": "绝对 npm 路径及固定 argv，cache clean --force --cache ROOT；--force 是 npm 的清缓存必需参数，不是强制解锁；完整原生域批准，记录创建的诊断文件。",
+    "native_npx": "绝对 npm 路径及 cache npx rm --cache ROOT；仅在已验证支持的版本执行；按完整 _npx 域批准，目标有运行引用则等待。",
+    "native_uv": "绝对 uv 路径及 cache clean --cache-dir ROOT；保留锁，不传 --force；支持时为子进程设置 UV_LOCK_TIMEOUT=30。不能用 prune 冒充 clean。",
+    "download_runtime": "完整下载副本为一个动作；明确具体目标无运行引用后删除，不关闭浏览器；内部符号链接只解绑、不跟随，外部/唯一内容则待调查。",
+    "puppeteer_runtime": "先按 download_runtime 协议检查；动作还需声明同一产品 .metadata 中指向目标 buildId 的 aliases 和 platform-buildId 对应 executablePaths 键。只删除这些映射，保留其他字段/版本，文件缺失不创建。写入前复核摘要、并发写入则待执行；不执行用户 JS 配置，不静默扩大清空范围。",
+    "claude_retirement": "重新检查 launcher、保留集合和目标二进制身份；确认目标无运行引用；不改 launcher；仅删除批准的旧版本文件。",
+    "none": "只读展示或保留，不生成执行动作。"
+  },
+  "global_policy": {
+    "local_rebuild_cost_accepted": true,
+    "paid_model_recompute_accepted": false,
+    "follow_symlinks": false,
+    "root_execution_allowed": false,
+    "read_user_content": false,
+    "cleanup_authorization": "separate_batch_approval",
+    "pattern_semantics": "segment_glob; * never crosses /; ** only bounded project bytecode; no shell expansion",
+    "selection_order": "protected ancestors > explicit specific reservations > highest priority matching rule; failing identity never falls back to a lower rule",
+    "coverage_statuses": [
+      "matched",
+      "absent",
+      "access_denied",
+      "budget_exceeded",
+      "layout_unverified",
+      "root_unresolved"
+    ],
+    "max_project_depth": 6,
+    "max_discovery_entries": 50000,
+    "discovery_timeout_seconds": 180,
+    "max_measurement_entries": 50000,
+    "measurement_timeout_seconds": 30,
+    "wait_seconds": 30
+  },
+  "rules": [
+    {
+      "id": "macos-user-cache",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Caches/*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "用户标准应用缓存",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "apple-library"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "macos-user-log",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Logs/*"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "用户诊断日志",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "只生成今后的日志",
+      "impact": "历史诊断不可恢复；打开句柄可能延迟释放",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "apple-library"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "sandbox-cache",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Containers/*/Data/Library/Caches"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "沙盒/应用组标准缓存",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "apple-library"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "sandbox-log",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Containers/*/Data/Library/Logs"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "沙盒/应用组诊断日志",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "只生成今后的日志",
+      "impact": "历史诊断不可恢复",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "apple-library"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "group-cache",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Group Containers/*/Library/Caches"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "沙盒/应用组标准缓存",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "apple-library"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "group-log",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Group Containers/*/Library/Logs"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "沙盒/应用组诊断日志",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "只生成今后的日志",
+      "impact": "历史诊断不可恢复",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "apple-library"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "app-render-cache",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 200,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Code/Cache",
+            "Code/Code Cache",
+            "Code/GPUCache",
+            "Code/ShaderCache",
+            "Code/GrShaderCache",
+            "Code/DawnCache",
+            "Code/GraphiteDawnCache",
+            "Code/DawnGraphiteCache",
+            "Code/DawnWebGPUCache",
+            "Code - Insiders/Cache",
+            "Code - Insiders/Code Cache",
+            "Code - Insiders/GPUCache",
+            "Code - Insiders/ShaderCache",
+            "Code - Insiders/GrShaderCache",
+            "Code - Insiders/DawnCache",
+            "Code - Insiders/GraphiteDawnCache",
+            "Code - Insiders/DawnGraphiteCache",
+            "Code - Insiders/DawnWebGPUCache",
+            "VSCodium/Cache",
+            "VSCodium/Code Cache",
+            "VSCodium/GPUCache",
+            "VSCodium/ShaderCache",
+            "VSCodium/GrShaderCache",
+            "VSCodium/DawnCache",
+            "VSCodium/GraphiteDawnCache",
+            "VSCodium/DawnGraphiteCache",
+            "VSCodium/DawnWebGPUCache",
+            "Slack/Cache",
+            "Slack/Code Cache",
+            "Slack/GPUCache",
+            "Slack/ShaderCache",
+            "Slack/GrShaderCache",
+            "Slack/DawnCache",
+            "Slack/GraphiteDawnCache",
+            "Slack/DawnGraphiteCache",
+            "Slack/DawnWebGPUCache",
+            "Discord/Cache",
+            "Discord/Code Cache",
+            "Discord/GPUCache",
+            "Discord/ShaderCache",
+            "Discord/GrShaderCache",
+            "Discord/DawnCache",
+            "Discord/GraphiteDawnCache",
+            "Discord/DawnGraphiteCache",
+            "Discord/DawnWebGPUCache",
+            "Notion/Cache",
+            "Notion/Code Cache",
+            "Notion/GPUCache",
+            "Notion/ShaderCache",
+            "Notion/GrShaderCache",
+            "Notion/DawnCache",
+            "Notion/GraphiteDawnCache",
+            "Notion/DawnGraphiteCache",
+            "Notion/DawnWebGPUCache",
+            "Figma/Cache",
+            "Figma/Code Cache",
+            "Figma/GPUCache",
+            "Figma/ShaderCache",
+            "Figma/GrShaderCache",
+            "Figma/DawnCache",
+            "Figma/GraphiteDawnCache",
+            "Figma/DawnGraphiteCache",
+            "Figma/DawnWebGPUCache",
+            "Termius/Cache",
+            "Termius/Code Cache",
+            "Termius/GPUCache",
+            "Termius/ShaderCache",
+            "Termius/GrShaderCache",
+            "Termius/DawnCache",
+            "Termius/GraphiteDawnCache",
+            "Termius/DawnGraphiteCache",
+            "Termius/DawnWebGPUCache"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "已登记应用的 Chromium 渲染缓存叶目录",
+      "identity_checks": [
+        "chromium_layout"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "electron-paths",
+        "mole-caches"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "ai-render-cache",
+      "version": 1,
+      "category": "ai",
+      "status": "ready",
+      "priority": 200,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Codex/Cache",
+            "Codex/Code Cache",
+            "Codex/GPUCache",
+            "Codex/ShaderCache",
+            "Codex/GrShaderCache",
+            "Codex/DawnCache",
+            "Codex/GraphiteDawnCache",
+            "Codex/DawnGraphiteCache",
+            "Codex/DawnWebGPUCache",
+            "Claude/Cache",
+            "Claude/Code Cache",
+            "Claude/GPUCache",
+            "Claude/ShaderCache",
+            "Claude/GrShaderCache",
+            "Claude/DawnCache",
+            "Claude/GraphiteDawnCache",
+            "Claude/DawnGraphiteCache",
+            "Claude/DawnWebGPUCache",
+            "ChatGPT/Cache",
+            "ChatGPT/Code Cache",
+            "ChatGPT/GPUCache",
+            "ChatGPT/ShaderCache",
+            "ChatGPT/GrShaderCache",
+            "ChatGPT/DawnCache",
+            "ChatGPT/GraphiteDawnCache",
+            "ChatGPT/DawnGraphiteCache",
+            "ChatGPT/DawnWebGPUCache",
+            "Cursor/Cache",
+            "Cursor/Code Cache",
+            "Cursor/GPUCache",
+            "Cursor/ShaderCache",
+            "Cursor/GrShaderCache",
+            "Cursor/DawnCache",
+            "Cursor/GraphiteDawnCache",
+            "Cursor/DawnGraphiteCache",
+            "Cursor/DawnWebGPUCache",
+            "Windsurf/Cache",
+            "Windsurf/Code Cache",
+            "Windsurf/GPUCache",
+            "Windsurf/ShaderCache",
+            "Windsurf/GrShaderCache",
+            "Windsurf/DawnCache",
+            "Windsurf/GraphiteDawnCache",
+            "Windsurf/DawnGraphiteCache",
+            "Windsurf/DawnWebGPUCache",
+            "LM Studio/Cache",
+            "LM Studio/Code Cache",
+            "LM Studio/GPUCache",
+            "LM Studio/ShaderCache",
+            "LM Studio/GrShaderCache",
+            "LM Studio/DawnCache",
+            "LM Studio/GraphiteDawnCache",
+            "LM Studio/DawnGraphiteCache",
+            "LM Studio/DawnWebGPUCache"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "AI 客户端渲染缓存；不含对话/推理状态",
+      "identity_checks": [
+        "chromium_layout"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "electron-paths",
+        "mole-caches"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "editor-code-cache",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 200,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Code/CachedData",
+            "Code - Insiders/CachedData",
+            "VSCodium/CachedData"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "编辑器生成的代码缓存",
+      "identity_checks": [
+        "editor_layout"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "vscode-code-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "editor-vsix-download",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 200,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Code/CachedExtensionVSIXs",
+            "Code - Insiders/CachedExtensionVSIXs",
+            "VSCodium/CachedExtensionVSIXs"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "已下载扩展安装包副本",
+      "identity_checks": [
+        "editor_layout"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "需要时重新下载扩展包；不卸载扩展",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "vscode-vsix",
+        "vscode-environment"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "ai-editor-extra-cache",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 250,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Cursor/CachedData",
+            "Cursor/CachedExtensionVSIXs",
+            "Windsurf/CachedData",
+            "Windsurf/CachedExtensionVSIXs"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "AI 编辑器的继承布局",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "vscode-vsix",
+        "live-layouts"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "includes_local_observation",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "补齐具体产品的目录用途/版本验证，不能仅因继承 VS Code 就认定所有缓存语义相同。"
+    },
+    {
+      "id": "editor-log",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 200,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Code/logs",
+            "Code - Insiders/logs",
+            "VSCodium/logs"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "编辑器诊断日志",
+      "identity_checks": [
+        "editor_layout"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "只生成今后的日志",
+      "impact": "历史诊断不可恢复",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "vscode-environment"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "ai-support-log",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 250,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Codex/logs",
+            "Codex/Logs",
+            "Claude/logs",
+            "Claude/Logs",
+            "ChatGPT/logs",
+            "ChatGPT/Logs",
+            "Cursor/logs",
+            "Cursor/Logs",
+            "Windsurf/logs",
+            "Windsurf/Logs",
+            "LM Studio/logs",
+            "LM Studio/Logs"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "AI 应用专用日志路径",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "mole-caches"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "逐产品确认日志用途；不要将会话/审计/模型结果存储按名字判为日志。"
+    },
+    {
+      "id": "browser-profile-cache",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 220,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Google/Chrome/Default/Cache",
+            "Google/Chrome/Default/Code Cache",
+            "Google/Chrome/Default/GPUCache",
+            "Google/Chrome/Default/ShaderCache",
+            "Google/Chrome/Default/GrShaderCache",
+            "Google/Chrome/Default/DawnCache",
+            "Google/Chrome/Default/GraphiteDawnCache",
+            "Google/Chrome/Default/DawnGraphiteCache",
+            "Google/Chrome/Default/DawnWebGPUCache",
+            "Google/Chrome/Profile [0-9]*/Cache",
+            "Google/Chrome/Profile [0-9]*/Code Cache",
+            "Google/Chrome/Profile [0-9]*/GPUCache",
+            "Google/Chrome/Profile [0-9]*/ShaderCache",
+            "Google/Chrome/Profile [0-9]*/GrShaderCache",
+            "Google/Chrome/Profile [0-9]*/DawnCache",
+            "Google/Chrome/Profile [0-9]*/GraphiteDawnCache",
+            "Google/Chrome/Profile [0-9]*/DawnGraphiteCache",
+            "Google/Chrome/Profile [0-9]*/DawnWebGPUCache",
+            "Google/Chrome/Guest Profile/Cache",
+            "Google/Chrome/Guest Profile/Code Cache",
+            "Google/Chrome/Guest Profile/GPUCache",
+            "Google/Chrome/Guest Profile/ShaderCache",
+            "Google/Chrome/Guest Profile/GrShaderCache",
+            "Google/Chrome/Guest Profile/DawnCache",
+            "Google/Chrome/Guest Profile/GraphiteDawnCache",
+            "Google/Chrome/Guest Profile/DawnGraphiteCache",
+            "Google/Chrome/Guest Profile/DawnWebGPUCache",
+            "Google/Chrome/System Profile/Cache",
+            "Google/Chrome/System Profile/Code Cache",
+            "Google/Chrome/System Profile/GPUCache",
+            "Google/Chrome/System Profile/ShaderCache",
+            "Google/Chrome/System Profile/GrShaderCache",
+            "Google/Chrome/System Profile/DawnCache",
+            "Google/Chrome/System Profile/GraphiteDawnCache",
+            "Google/Chrome/System Profile/DawnGraphiteCache",
+            "Google/Chrome/System Profile/DawnWebGPUCache",
+            "Google/Chrome Canary/Default/Cache",
+            "Google/Chrome Canary/Default/Code Cache",
+            "Google/Chrome Canary/Default/GPUCache",
+            "Google/Chrome Canary/Default/ShaderCache",
+            "Google/Chrome Canary/Default/GrShaderCache",
+            "Google/Chrome Canary/Default/DawnCache",
+            "Google/Chrome Canary/Default/GraphiteDawnCache",
+            "Google/Chrome Canary/Default/DawnGraphiteCache",
+            "Google/Chrome Canary/Default/DawnWebGPUCache",
+            "Google/Chrome Canary/Profile [0-9]*/Cache",
+            "Google/Chrome Canary/Profile [0-9]*/Code Cache",
+            "Google/Chrome Canary/Profile [0-9]*/GPUCache",
+            "Google/Chrome Canary/Profile [0-9]*/ShaderCache",
+            "Google/Chrome Canary/Profile [0-9]*/GrShaderCache",
+            "Google/Chrome Canary/Profile [0-9]*/DawnCache",
+            "Google/Chrome Canary/Profile [0-9]*/GraphiteDawnCache",
+            "Google/Chrome Canary/Profile [0-9]*/DawnGraphiteCache",
+            "Google/Chrome Canary/Profile [0-9]*/DawnWebGPUCache",
+            "Google/Chrome Canary/Guest Profile/Cache",
+            "Google/Chrome Canary/Guest Profile/Code Cache",
+            "Google/Chrome Canary/Guest Profile/GPUCache",
+            "Google/Chrome Canary/Guest Profile/ShaderCache",
+            "Google/Chrome Canary/Guest Profile/GrShaderCache",
+            "Google/Chrome Canary/Guest Profile/DawnCache",
+            "Google/Chrome Canary/Guest Profile/GraphiteDawnCache",
+            "Google/Chrome Canary/Guest Profile/DawnGraphiteCache",
+            "Google/Chrome Canary/Guest Profile/DawnWebGPUCache",
+            "Google/Chrome Canary/System Profile/Cache",
+            "Google/Chrome Canary/System Profile/Code Cache",
+            "Google/Chrome Canary/System Profile/GPUCache",
+            "Google/Chrome Canary/System Profile/ShaderCache",
+            "Google/Chrome Canary/System Profile/GrShaderCache",
+            "Google/Chrome Canary/System Profile/DawnCache",
+            "Google/Chrome Canary/System Profile/GraphiteDawnCache",
+            "Google/Chrome Canary/System Profile/DawnGraphiteCache",
+            "Google/Chrome Canary/System Profile/DawnWebGPUCache",
+            "Microsoft Edge/Default/Cache",
+            "Microsoft Edge/Default/Code Cache",
+            "Microsoft Edge/Default/GPUCache",
+            "Microsoft Edge/Default/ShaderCache",
+            "Microsoft Edge/Default/GrShaderCache",
+            "Microsoft Edge/Default/DawnCache",
+            "Microsoft Edge/Default/GraphiteDawnCache",
+            "Microsoft Edge/Default/DawnGraphiteCache",
+            "Microsoft Edge/Default/DawnWebGPUCache",
+            "Microsoft Edge/Profile [0-9]*/Cache",
+            "Microsoft Edge/Profile [0-9]*/Code Cache",
+            "Microsoft Edge/Profile [0-9]*/GPUCache",
+            "Microsoft Edge/Profile [0-9]*/ShaderCache",
+            "Microsoft Edge/Profile [0-9]*/GrShaderCache",
+            "Microsoft Edge/Profile [0-9]*/DawnCache",
+            "Microsoft Edge/Profile [0-9]*/GraphiteDawnCache",
+            "Microsoft Edge/Profile [0-9]*/DawnGraphiteCache",
+            "Microsoft Edge/Profile [0-9]*/DawnWebGPUCache",
+            "Microsoft Edge/Guest Profile/Cache",
+            "Microsoft Edge/Guest Profile/Code Cache",
+            "Microsoft Edge/Guest Profile/GPUCache",
+            "Microsoft Edge/Guest Profile/ShaderCache",
+            "Microsoft Edge/Guest Profile/GrShaderCache",
+            "Microsoft Edge/Guest Profile/DawnCache",
+            "Microsoft Edge/Guest Profile/GraphiteDawnCache",
+            "Microsoft Edge/Guest Profile/DawnGraphiteCache",
+            "Microsoft Edge/Guest Profile/DawnWebGPUCache",
+            "Microsoft Edge/System Profile/Cache",
+            "Microsoft Edge/System Profile/Code Cache",
+            "Microsoft Edge/System Profile/GPUCache",
+            "Microsoft Edge/System Profile/ShaderCache",
+            "Microsoft Edge/System Profile/GrShaderCache",
+            "Microsoft Edge/System Profile/DawnCache",
+            "Microsoft Edge/System Profile/GraphiteDawnCache",
+            "Microsoft Edge/System Profile/DawnGraphiteCache",
+            "Microsoft Edge/System Profile/DawnWebGPUCache",
+            "BraveSoftware/Brave-Browser/Default/Cache",
+            "BraveSoftware/Brave-Browser/Default/Code Cache",
+            "BraveSoftware/Brave-Browser/Default/GPUCache",
+            "BraveSoftware/Brave-Browser/Default/ShaderCache",
+            "BraveSoftware/Brave-Browser/Default/GrShaderCache",
+            "BraveSoftware/Brave-Browser/Default/DawnCache",
+            "BraveSoftware/Brave-Browser/Default/GraphiteDawnCache",
+            "BraveSoftware/Brave-Browser/Default/DawnGraphiteCache",
+            "BraveSoftware/Brave-Browser/Default/DawnWebGPUCache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/Cache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/Code Cache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/GPUCache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/ShaderCache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/GrShaderCache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/DawnCache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/GraphiteDawnCache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/DawnGraphiteCache",
+            "BraveSoftware/Brave-Browser/Profile [0-9]*/DawnWebGPUCache",
+            "BraveSoftware/Brave-Browser/Guest Profile/Cache",
+            "BraveSoftware/Brave-Browser/Guest Profile/Code Cache",
+            "BraveSoftware/Brave-Browser/Guest Profile/GPUCache",
+            "BraveSoftware/Brave-Browser/Guest Profile/ShaderCache",
+            "BraveSoftware/Brave-Browser/Guest Profile/GrShaderCache",
+            "BraveSoftware/Brave-Browser/Guest Profile/DawnCache",
+            "BraveSoftware/Brave-Browser/Guest Profile/GraphiteDawnCache",
+            "BraveSoftware/Brave-Browser/Guest Profile/DawnGraphiteCache",
+            "BraveSoftware/Brave-Browser/Guest Profile/DawnWebGPUCache",
+            "BraveSoftware/Brave-Browser/System Profile/Cache",
+            "BraveSoftware/Brave-Browser/System Profile/Code Cache",
+            "BraveSoftware/Brave-Browser/System Profile/GPUCache",
+            "BraveSoftware/Brave-Browser/System Profile/ShaderCache",
+            "BraveSoftware/Brave-Browser/System Profile/GrShaderCache",
+            "BraveSoftware/Brave-Browser/System Profile/DawnCache",
+            "BraveSoftware/Brave-Browser/System Profile/GraphiteDawnCache",
+            "BraveSoftware/Brave-Browser/System Profile/DawnGraphiteCache",
+            "BraveSoftware/Brave-Browser/System Profile/DawnWebGPUCache",
+            "Chromium/Default/Cache",
+            "Chromium/Default/Code Cache",
+            "Chromium/Default/GPUCache",
+            "Chromium/Default/ShaderCache",
+            "Chromium/Default/GrShaderCache",
+            "Chromium/Default/DawnCache",
+            "Chromium/Default/GraphiteDawnCache",
+            "Chromium/Default/DawnGraphiteCache",
+            "Chromium/Default/DawnWebGPUCache",
+            "Chromium/Profile [0-9]*/Cache",
+            "Chromium/Profile [0-9]*/Code Cache",
+            "Chromium/Profile [0-9]*/GPUCache",
+            "Chromium/Profile [0-9]*/ShaderCache",
+            "Chromium/Profile [0-9]*/GrShaderCache",
+            "Chromium/Profile [0-9]*/DawnCache",
+            "Chromium/Profile [0-9]*/GraphiteDawnCache",
+            "Chromium/Profile [0-9]*/DawnGraphiteCache",
+            "Chromium/Profile [0-9]*/DawnWebGPUCache",
+            "Chromium/Guest Profile/Cache",
+            "Chromium/Guest Profile/Code Cache",
+            "Chromium/Guest Profile/GPUCache",
+            "Chromium/Guest Profile/ShaderCache",
+            "Chromium/Guest Profile/GrShaderCache",
+            "Chromium/Guest Profile/DawnCache",
+            "Chromium/Guest Profile/GraphiteDawnCache",
+            "Chromium/Guest Profile/DawnGraphiteCache",
+            "Chromium/Guest Profile/DawnWebGPUCache",
+            "Chromium/System Profile/Cache",
+            "Chromium/System Profile/Code Cache",
+            "Chromium/System Profile/GPUCache",
+            "Chromium/System Profile/ShaderCache",
+            "Chromium/System Profile/GrShaderCache",
+            "Chromium/System Profile/DawnCache",
+            "Chromium/System Profile/GraphiteDawnCache",
+            "Chromium/System Profile/DawnGraphiteCache",
+            "Chromium/System Profile/DawnWebGPUCache",
+            "Vivaldi/Default/Cache",
+            "Vivaldi/Default/Code Cache",
+            "Vivaldi/Default/GPUCache",
+            "Vivaldi/Default/ShaderCache",
+            "Vivaldi/Default/GrShaderCache",
+            "Vivaldi/Default/DawnCache",
+            "Vivaldi/Default/GraphiteDawnCache",
+            "Vivaldi/Default/DawnGraphiteCache",
+            "Vivaldi/Default/DawnWebGPUCache",
+            "Vivaldi/Profile [0-9]*/Cache",
+            "Vivaldi/Profile [0-9]*/Code Cache",
+            "Vivaldi/Profile [0-9]*/GPUCache",
+            "Vivaldi/Profile [0-9]*/ShaderCache",
+            "Vivaldi/Profile [0-9]*/GrShaderCache",
+            "Vivaldi/Profile [0-9]*/DawnCache",
+            "Vivaldi/Profile [0-9]*/GraphiteDawnCache",
+            "Vivaldi/Profile [0-9]*/DawnGraphiteCache",
+            "Vivaldi/Profile [0-9]*/DawnWebGPUCache",
+            "Vivaldi/Guest Profile/Cache",
+            "Vivaldi/Guest Profile/Code Cache",
+            "Vivaldi/Guest Profile/GPUCache",
+            "Vivaldi/Guest Profile/ShaderCache",
+            "Vivaldi/Guest Profile/GrShaderCache",
+            "Vivaldi/Guest Profile/DawnCache",
+            "Vivaldi/Guest Profile/GraphiteDawnCache",
+            "Vivaldi/Guest Profile/DawnGraphiteCache",
+            "Vivaldi/Guest Profile/DawnWebGPUCache",
+            "Vivaldi/System Profile/Cache",
+            "Vivaldi/System Profile/Code Cache",
+            "Vivaldi/System Profile/GPUCache",
+            "Vivaldi/System Profile/ShaderCache",
+            "Vivaldi/System Profile/GrShaderCache",
+            "Vivaldi/System Profile/DawnCache",
+            "Vivaldi/System Profile/GraphiteDawnCache",
+            "Vivaldi/System Profile/DawnGraphiteCache",
+            "Vivaldi/System Profile/DawnWebGPUCache",
+            "Arc/User Data/Default/Cache",
+            "Arc/User Data/Default/Code Cache",
+            "Arc/User Data/Default/GPUCache",
+            "Arc/User Data/Default/ShaderCache",
+            "Arc/User Data/Default/GrShaderCache",
+            "Arc/User Data/Default/DawnCache",
+            "Arc/User Data/Default/GraphiteDawnCache",
+            "Arc/User Data/Default/DawnGraphiteCache",
+            "Arc/User Data/Default/DawnWebGPUCache",
+            "Arc/User Data/Profile [0-9]*/Cache",
+            "Arc/User Data/Profile [0-9]*/Code Cache",
+            "Arc/User Data/Profile [0-9]*/GPUCache",
+            "Arc/User Data/Profile [0-9]*/ShaderCache",
+            "Arc/User Data/Profile [0-9]*/GrShaderCache",
+            "Arc/User Data/Profile [0-9]*/DawnCache",
+            "Arc/User Data/Profile [0-9]*/GraphiteDawnCache",
+            "Arc/User Data/Profile [0-9]*/DawnGraphiteCache",
+            "Arc/User Data/Profile [0-9]*/DawnWebGPUCache",
+            "Arc/User Data/Guest Profile/Cache",
+            "Arc/User Data/Guest Profile/Code Cache",
+            "Arc/User Data/Guest Profile/GPUCache",
+            "Arc/User Data/Guest Profile/ShaderCache",
+            "Arc/User Data/Guest Profile/GrShaderCache",
+            "Arc/User Data/Guest Profile/DawnCache",
+            "Arc/User Data/Guest Profile/GraphiteDawnCache",
+            "Arc/User Data/Guest Profile/DawnGraphiteCache",
+            "Arc/User Data/Guest Profile/DawnWebGPUCache",
+            "Arc/User Data/System Profile/Cache",
+            "Arc/User Data/System Profile/Code Cache",
+            "Arc/User Data/System Profile/GPUCache",
+            "Arc/User Data/System Profile/ShaderCache",
+            "Arc/User Data/System Profile/GrShaderCache",
+            "Arc/User Data/System Profile/DawnCache",
+            "Arc/User Data/System Profile/GraphiteDawnCache",
+            "Arc/User Data/System Profile/DawnGraphiteCache",
+            "Arc/User Data/System Profile/DawnWebGPUCache"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "浏览器 profile 内的渲染/HTTP 缓存叶目录",
+      "identity_checks": [
+        "browser_profile"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "chromium-paths",
+        "electron-paths",
+        "mole-caches"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "browser-root-shader",
+      "version": 1,
+      "category": "app",
+      "status": "ready",
+      "priority": 220,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Google/Chrome/Code Cache",
+            "Google/Chrome/GPUCache",
+            "Google/Chrome/ShaderCache",
+            "Google/Chrome/GrShaderCache",
+            "Google/Chrome/DawnCache",
+            "Google/Chrome/GraphiteDawnCache",
+            "Google/Chrome/DawnGraphiteCache",
+            "Google/Chrome/DawnWebGPUCache",
+            "Google/Chrome Canary/Code Cache",
+            "Google/Chrome Canary/GPUCache",
+            "Google/Chrome Canary/ShaderCache",
+            "Google/Chrome Canary/GrShaderCache",
+            "Google/Chrome Canary/DawnCache",
+            "Google/Chrome Canary/GraphiteDawnCache",
+            "Google/Chrome Canary/DawnGraphiteCache",
+            "Google/Chrome Canary/DawnWebGPUCache",
+            "Microsoft Edge/Code Cache",
+            "Microsoft Edge/GPUCache",
+            "Microsoft Edge/ShaderCache",
+            "Microsoft Edge/GrShaderCache",
+            "Microsoft Edge/DawnCache",
+            "Microsoft Edge/GraphiteDawnCache",
+            "Microsoft Edge/DawnGraphiteCache",
+            "Microsoft Edge/DawnWebGPUCache",
+            "BraveSoftware/Brave-Browser/Code Cache",
+            "BraveSoftware/Brave-Browser/GPUCache",
+            "BraveSoftware/Brave-Browser/ShaderCache",
+            "BraveSoftware/Brave-Browser/GrShaderCache",
+            "BraveSoftware/Brave-Browser/DawnCache",
+            "BraveSoftware/Brave-Browser/GraphiteDawnCache",
+            "BraveSoftware/Brave-Browser/DawnGraphiteCache",
+            "BraveSoftware/Brave-Browser/DawnWebGPUCache",
+            "Chromium/Code Cache",
+            "Chromium/GPUCache",
+            "Chromium/ShaderCache",
+            "Chromium/GrShaderCache",
+            "Chromium/DawnCache",
+            "Chromium/GraphiteDawnCache",
+            "Chromium/DawnGraphiteCache",
+            "Chromium/DawnWebGPUCache",
+            "Vivaldi/Code Cache",
+            "Vivaldi/GPUCache",
+            "Vivaldi/ShaderCache",
+            "Vivaldi/GrShaderCache",
+            "Vivaldi/DawnCache",
+            "Vivaldi/GraphiteDawnCache",
+            "Vivaldi/DawnGraphiteCache",
+            "Vivaldi/DawnWebGPUCache",
+            "Arc/User Data/Code Cache",
+            "Arc/User Data/GPUCache",
+            "Arc/User Data/ShaderCache",
+            "Arc/User Data/GrShaderCache",
+            "Arc/User Data/DawnCache",
+            "Arc/User Data/GraphiteDawnCache",
+            "Arc/User Data/DawnGraphiteCache",
+            "Arc/User Data/DawnWebGPUCache"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "浏览器根下 shader/code 缓存",
+      "identity_checks": [
+        "chromium_layout"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "chromium-paths",
+        "electron-paths"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "firefox-support-cache",
+      "version": 1,
+      "category": "app",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Firefox/Profiles/*/cache2"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Firefox 专用缓存候选",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "mole-caches"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "补充 Mozilla 的具体 profile/local-profile 路径与 cache2 验证。Library/Caches 下的标准域由通用规则覆盖。"
+    },
+    {
+      "id": "design-media-cache",
+      "version": 1,
+      "category": "app",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Adobe/Common/Media Cache Files",
+            "com.bohemiancoding.sketch3/cache"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "设计软件专用缓存候选",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "mole-caches"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "补充产品官方用途、原始媒体仍可获取及恢复语义；不借其他清理工具的选择自动启用。"
+    },
+    {
+      "id": "support-unreviewed-leaf",
+      "version": 1,
+      "category": "app",
+      "status": "research",
+      "priority": 10,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "*/Cache",
+            "*/Caches",
+            "*/cache",
+            "*/log",
+            "*/Log",
+            "*/logs",
+            "*/Logs"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "未登记应用的浅层缓存/日志候选",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "需应用级依据；只发现和计量，不递归按关键词删除。"
+    },
+    {
+      "id": "codex-legacy-tui-log",
+      "version": 1,
+      "category": "ai",
+      "status": "ready",
+      "priority": 300,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "log/codex-tui.log"
+          ],
+          "kind": "file"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Codex 官方启动逻辑可清的旧诊断日志",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "只生成今后的诊断",
+      "impact": "旧诊断不可恢复；不读取正文",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "codex-log"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "codex-other-log",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 10,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "log/*"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Codex 其他日志候选",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "codex-log"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "本次源码仅证明特定旧 TUI 文件；其余日志需补充对应写入者。"
+    },
+    {
+      "id": "codex-model-catalog",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "models_cache.json"
+          ],
+          "kind": "file"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "模型列表和元数据缓存",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "codex-models",
+        "codex-client"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "刷新不是推理，但元数据可能改变后续请求；费用约束未查清前不默认选中。"
+    },
+    {
+      "id": "codex-shell-snapshots",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "shell_snapshots"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "本地 Shell 初始化快照",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "codex-snapshot"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "需要实现与源码一致的生命周期识别，避免活动命令失败后引发模型重试。"
+    },
+    {
+      "id": "codex-arg0",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "tmp/arg0-macos/codex-arg0*",
+            "tmp/arg0/codex-arg0*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "自动生成的命令入口",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "codex-arg0"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "已定位锁协议，但 Python/macOS 锁兼容和退休动作尚未做 fixture 验证；禁止删 tmp 整体。"
+    },
+    {
+      "id": "codex-daemon-releases",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "packages/app-server-daemon/releases/*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "daemon 旧运行时",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "codex-pruning",
+        "codex-install"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "需匹配 current 与 selection-history、两类锁、当前/前次选择和运行可执行文件身份；不能仅按版本号排序。"
+    },
+    {
+      "id": "codex-standalone-releases",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "packages/standalone/releases/*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "独立 CLI 版本目录",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "codex-install"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "独立 CLI 与 daemon 保留职责不等同；需查启动器/后台运行关系和原生退休协议。"
+    },
+    {
+      "id": "codex-daemon-staging",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 500,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "packages/app-server-daemon/releases/.staging.*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "源码确认的发布前暂存",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "codex-stage"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "确认不在发布事务中，并实现同一安装/生命周期锁；禁止仅靠目录年龄。"
+    },
+    {
+      "id": "codex-desktop-runtime-staging",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            ".cache/codex-runtimes/codex-runtime-install-*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "实际观察的桌面运行时安装暂存",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "live-layouts"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "includes_local_observation",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "含 payload/ 和 node-runtime.tar.xz；公开 CLI 源码未找到对应安装器，需验证完成/中断判据。"
+    },
+    {
+      "id": "claude-debug-log",
+      "version": 1,
+      "category": "ai",
+      "status": "ready",
+      "priority": 300,
+      "selectors": [
+        {
+          "root": "CLAUDE_HOME",
+          "patterns": [
+            "debug/*.txt"
+          ],
+          "kind": "file"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Claude Code 调试日志",
+      "identity_checks": [],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "只生成今后的诊断",
+      "impact": "删除历史诊断；不读取日志内容",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "claude-env"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "claude-old-native",
+      "version": 1,
+      "category": "ai",
+      "status": "ready",
+      "priority": 300,
+      "selectors": [
+        {
+          "root": "CLAUDE_VERSIONS",
+          "patterns": [
+            "[0-9]*.[0-9]*.[0-9]*"
+          ],
+          "kind": "file"
+        }
+      ],
+      "selection": "target",
+      "purpose": "Claude 原生旧版可执行文件",
+      "identity_checks": [
+        "claude_launcher",
+        "claude_obsolete",
+        "local_volume"
+      ],
+      "action": "retire_claude_version",
+      "execution_protocol": "claude_retirement",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "原生安装器可重新下载；保留当前及最新两个有效版本",
+      "impact": "只移除经判定无保留职责的旧版本，运行中的旧版本等待",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "claude-install"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "cursor-worker-versions",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 500,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Cursor/User/globalStorage/anysphere.cursor-agent-worker/agent-cli/.local/share/cursor-agent/versions/*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Cursor agent-worker 版本和临时安装",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "live-layouts"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "includes_local_observation",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "实测没有 current；需识别 worker 实际使用版本及回退职责，不能清空 globalStorage。"
+    },
+    {
+      "id": "cursor-cli-versions",
+      "version": 1,
+      "category": "ai",
+      "status": "research",
+      "priority": 400,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            ".local/share/cursor-agent/versions/*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Cursor CLI 独立安装候选",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "本机没有对该布局完成验证；需官方安装器依据与 launcher 映射。"
+    },
+    {
+      "id": "next-build-cache",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "NEXT_DIST",
+          "patterns": [
+            "cache"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Next.js 构建缓存",
+      "identity_checks": [
+        "next_project",
+        "project_untracked"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "project_cache",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "next-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "cargo-incremental",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "CARGO_BUILD",
+          "patterns": [
+            "debug/incremental",
+            "release/incremental",
+            "*/debug/incremental",
+            "*/release/incremental"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Cargo 本地增量编译产物",
+      "identity_checks": [
+        "rust_project",
+        "project_untracked"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "project_cache",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "只清 incremental，不清 deps/build/整个 target；活动编译叶项待执行",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "cargo-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "python-bytecode",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "PROJECT",
+          "patterns": [
+            "**/__pycache__/*.pyc"
+          ],
+          "kind": "file"
+        }
+      ],
+      "selection": "target",
+      "purpose": "有对应源码的 Python 编译缓存",
+      "identity_checks": [
+        "python_project",
+        "python_source_pair",
+        "project_untracked"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "project_cache",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "python-bytecode"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "pytest-core-cache",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "PYTEST_CACHE",
+          "patterns": [
+            "v/cache/nodeids",
+            "v/cache/lastfailed",
+            "v/cache/stepwise"
+          ],
+          "kind": "file"
+        }
+      ],
+      "selection": "target",
+      "purpose": "pytest 内置测试索引和失败列表",
+      "identity_checks": [
+        "python_project",
+        "cache_tag",
+        "project_untracked"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "project_cache",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "丢失历史失败/排序信息；不自动重跑测试",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "pytest-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "pytest-plugin-cache",
+      "version": 1,
+      "category": "development",
+      "status": "research",
+      "priority": 10,
+      "selectors": [
+        {
+          "root": "PYTEST_CACHE",
+          "patterns": [
+            "v/*"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "pytest 插件自定义缓存",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "pytest-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "插件可能缓存付费 API/模型结果；未确认键用途时不得清空整个 .pytest_cache。"
+    },
+    {
+      "id": "ruff-cache",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 100,
+      "selectors": [
+        {
+          "root": "RUFF_CACHE",
+          "patterns": [
+            "."
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Ruff 本地检查结果",
+      "identity_checks": [
+        "python_project",
+        "cache_tag",
+        "ruff_layout",
+        "project_untracked"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "project_cache",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "ruff-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "npm-content-cache",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 600,
+      "selectors": [
+        {
+          "root": "NPM_CACHE",
+          "patterns": [
+            "_cacache"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "native_domain",
+      "purpose": "npm 内容寻址下载缓存",
+      "identity_checks": [
+        "native_domain_verified",
+        "native_supported"
+      ],
+      "action": "native_npm_clean",
+      "execution_protocol": "native_npm",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "npm-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "npm-npx-cache",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 600,
+      "selectors": [
+        {
+          "root": "NPM_CACHE",
+          "patterns": [
+            "_npx"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "native_domain",
+      "purpose": "npm exec/npx 安装缓存",
+      "identity_checks": [
+        "native_domain_verified",
+        "native_supported"
+      ],
+      "action": "native_npx_rm",
+      "execution_protocol": "native_npx",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "npm-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "npm-diagnostic-log",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 600,
+      "selectors": [
+        {
+          "root": "NPM_CACHE",
+          "patterns": [
+            "_logs/*.log"
+          ],
+          "kind": "file"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "npm 诊断日志",
+      "identity_checks": [
+        "native_domain_verified"
+      ],
+      "action": "clear_files",
+      "execution_protocol": "online_inventory",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "只生成今后的日志",
+      "impact": "历史日志不可恢复",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "npm-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "uv-native-cache",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 600,
+      "selectors": [
+        {
+          "root": "UV_CACHE",
+          "patterns": [
+            "."
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "native_domain",
+      "purpose": "uv 下载/构建缓存域",
+      "identity_checks": [
+        "native_domain_verified",
+        "native_supported"
+      ],
+      "action": "native_uv_clean",
+      "execution_protocol": "native_uv",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "uv-cache"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "playwright-download",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 600,
+      "selectors": [
+        {
+          "root": "PLAYWRIGHT_CACHE",
+          "patterns": [
+            "chromium-*",
+            "chromium_headless_shell-*",
+            "firefox-*",
+            "webkit-*",
+            "ffmpeg-*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "target",
+      "purpose": "Playwright 自动下载副本",
+      "identity_checks": [
+        "playwright_layout"
+      ],
+      "action": "remove_downloaded_runtime",
+      "execution_protocol": "download_runtime",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "再次使用前可能需要原生安装命令下载；不要通过运行模型任务触发恢复",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "playwright"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "puppeteer-download",
+      "version": 1,
+      "category": "development",
+      "status": "ready",
+      "priority": 600,
+      "selectors": [
+        {
+          "root": "PUPPETEER_CACHE",
+          "patterns": [
+            "chrome/mac-*",
+            "chrome/mac_arm-*",
+            "chrome-headless-shell/mac-*",
+            "chrome-headless-shell/mac_arm-*",
+            "firefox/mac-*",
+            "firefox/mac_arm-*"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "target",
+      "purpose": "Puppeteer 自动下载副本",
+      "identity_checks": [
+        "puppeteer_layout"
+      ],
+      "action": "remove_puppeteer_runtime",
+      "execution_protocol": "puppeteer_runtime",
+      "default_selected": true,
+      "disposition": "disposable",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "no_expected_increase",
+      "evidence_sources": [
+        "puppeteer",
+        "puppeteer-cache-source",
+        "puppeteer-chrome-source",
+        "puppeteer-shell-source",
+        "puppeteer-firefox-source"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-codex-state",
+      "version": 1,
+      "category": "ai",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "CODEX_HOME",
+          "patterns": [
+            "auth.json",
+            "config.toml",
+            "sessions",
+            "archived_sessions",
+            "history.jsonl",
+            "session_index.jsonl",
+            "state_*.sqlite*",
+            "logs_*.sqlite*",
+            "memories",
+            "worktrees",
+            "plugins",
+            "skills",
+            "packages/*/current",
+            "packages/*/selection-history",
+            "packages/*/install.lock*"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "会话、配置、账本、插件、worktree 及安装控制状态",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-claude-state",
+      "version": 1,
+      "category": "ai",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "CLAUDE_HOME",
+          "patterns": [
+            "projects",
+            "history.jsonl",
+            "settings.json",
+            "settings.local.json",
+            ".credentials.json",
+            "todos",
+            "tasks",
+            "plans",
+            "file-history",
+            "plugins",
+            "skills",
+            "session-env"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "Claude 会话、环境、插件与用户状态",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-primary-runtime",
+      "version": 1,
+      "category": "ai",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            ".cache/codex-runtimes/codex-primary-runtime"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "当前工具运行环境不属于安装暂存",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-editor-state",
+      "version": 1,
+      "category": "ai",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "SUPPORT",
+          "patterns": [
+            "Code/User",
+            "Code/Backups",
+            "Code/Local Storage",
+            "Code/IndexedDB",
+            "Code/Session Storage",
+            "Code/Cookies",
+            "Code/Login Data",
+            "Code/History",
+            "Code/Service Worker",
+            "Code - Insiders/User",
+            "Code - Insiders/Backups",
+            "Code - Insiders/Local Storage",
+            "Code - Insiders/IndexedDB",
+            "Code - Insiders/Session Storage",
+            "Code - Insiders/Cookies",
+            "Code - Insiders/Login Data",
+            "Code - Insiders/History",
+            "Code - Insiders/Service Worker",
+            "VSCodium/User",
+            "VSCodium/Backups",
+            "VSCodium/Local Storage",
+            "VSCodium/IndexedDB",
+            "VSCodium/Session Storage",
+            "VSCodium/Cookies",
+            "VSCodium/Login Data",
+            "VSCodium/History",
+            "VSCodium/Service Worker",
+            "Slack/User",
+            "Slack/Backups",
+            "Slack/Local Storage",
+            "Slack/IndexedDB",
+            "Slack/Session Storage",
+            "Slack/Cookies",
+            "Slack/Login Data",
+            "Slack/History",
+            "Slack/Service Worker",
+            "Discord/User",
+            "Discord/Backups",
+            "Discord/Local Storage",
+            "Discord/IndexedDB",
+            "Discord/Session Storage",
+            "Discord/Cookies",
+            "Discord/Login Data",
+            "Discord/History",
+            "Discord/Service Worker",
+            "Notion/User",
+            "Notion/Backups",
+            "Notion/Local Storage",
+            "Notion/IndexedDB",
+            "Notion/Session Storage",
+            "Notion/Cookies",
+            "Notion/Login Data",
+            "Notion/History",
+            "Notion/Service Worker",
+            "Figma/User",
+            "Figma/Backups",
+            "Figma/Local Storage",
+            "Figma/IndexedDB",
+            "Figma/Session Storage",
+            "Figma/Cookies",
+            "Figma/Login Data",
+            "Figma/History",
+            "Figma/Service Worker",
+            "Termius/User",
+            "Termius/Backups",
+            "Termius/Local Storage",
+            "Termius/IndexedDB",
+            "Termius/Session Storage",
+            "Termius/Cookies",
+            "Termius/Login Data",
+            "Termius/History",
+            "Termius/Service Worker",
+            "Codex/User",
+            "Codex/Backups",
+            "Codex/Local Storage",
+            "Codex/IndexedDB",
+            "Codex/Session Storage",
+            "Codex/Cookies",
+            "Codex/Login Data",
+            "Codex/History",
+            "Codex/Service Worker",
+            "Claude/User",
+            "Claude/Backups",
+            "Claude/Local Storage",
+            "Claude/IndexedDB",
+            "Claude/Session Storage",
+            "Claude/Cookies",
+            "Claude/Login Data",
+            "Claude/History",
+            "Claude/Service Worker",
+            "ChatGPT/User",
+            "ChatGPT/Backups",
+            "ChatGPT/Local Storage",
+            "ChatGPT/IndexedDB",
+            "ChatGPT/Session Storage",
+            "ChatGPT/Cookies",
+            "ChatGPT/Login Data",
+            "ChatGPT/History",
+            "ChatGPT/Service Worker",
+            "Cursor/User",
+            "Cursor/Backups",
+            "Cursor/Local Storage",
+            "Cursor/IndexedDB",
+            "Cursor/Session Storage",
+            "Cursor/Cookies",
+            "Cursor/Login Data",
+            "Cursor/History",
+            "Cursor/Service Worker",
+            "Windsurf/User",
+            "Windsurf/Backups",
+            "Windsurf/Local Storage",
+            "Windsurf/IndexedDB",
+            "Windsurf/Session Storage",
+            "Windsurf/Cookies",
+            "Windsurf/Login Data",
+            "Windsurf/History",
+            "Windsurf/Service Worker",
+            "LM Studio/User",
+            "LM Studio/Backups",
+            "LM Studio/Local Storage",
+            "LM Studio/IndexedDB",
+            "LM Studio/Session Storage",
+            "LM Studio/Cookies",
+            "LM Studio/Login Data",
+            "LM Studio/History",
+            "LM Studio/Service Worker"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "应用/编辑器状态；不从通用缓存规则清除",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-home-state",
+      "version": 1,
+      "category": "app",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            ".ssh",
+            ".gnupg",
+            ".aws",
+            "Library/Preferences",
+            "Library/Mail",
+            "Library/Messages",
+            "Library/Keychains"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "凭据、配置和个人数据",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-project-inputs",
+      "version": 1,
+      "category": "development",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "PROJECT",
+          "patterns": [
+            ".git",
+            "node_modules",
+            ".venv",
+            "venv",
+            ".env",
+            "*/.git",
+            "*/node_modules",
+            "*/.venv",
+            "*/venv",
+            "*/.env",
+            "*/*/.git",
+            "*/*/node_modules",
+            "*/*/.venv",
+            "*/*/venv",
+            "*/*/.env",
+            "*/*/*/.git",
+            "*/*/*/node_modules",
+            "*/*/*/.venv",
+            "*/*/*/venv",
+            "*/*/*/.env",
+            "*/*/*/*/.git",
+            "*/*/*/*/node_modules",
+            "*/*/*/*/.venv",
+            "*/*/*/*/venv",
+            "*/*/*/*/.env",
+            "*/*/*/*/*/.git",
+            "*/*/*/*/*/node_modules",
+            "*/*/*/*/*/.venv",
+            "*/*/*/*/*/venv",
+            "*/*/*/*/*/.env",
+            "*/*/*/*/*/*/.git",
+            "*/*/*/*/*/*/node_modules",
+            "*/*/*/*/*/*/.venv",
+            "*/*/*/*/*/*/venv",
+            "*/*/*/*/*/*/.env"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "有界发现范围内的版本控制、依赖环境和配置不进入普通缓存；src/dist/build 本身未获清理授权，但其中精确匹配的缓存叶项可另行清理",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-next-data-cache",
+      "version": 1,
+      "category": "development",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "NEXT_DIST",
+          "patterns": [
+            "cache/fetch-cache"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "业务/API 响应缓存可能参与付费计算复用，不与编译缓存一并清理",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "next-fetch-cache",
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-audit",
+      "version": 1,
+      "category": "app",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Logs/MacLean",
+            "Library/Logs/maclean",
+            "Library/Logs/macos-disk-auditor",
+            "Library/Logs/mole"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "清理收据和审计历史",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-sync-state",
+      "version": 1,
+      "category": "app",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Caches/CloudKit*",
+            "Library/Caches/*[Ff]ile[Pp]rovider*"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "同步或可能尚未同步的数据",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-service-state",
+      "version": 1,
+      "category": "app",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Caches/com.apple.FontRegistry*",
+            "Library/Caches/com.apple.[sS]potlight*"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "系统服务专用状态，普通文件清理协议未验证",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-model-bundles",
+      "version": 1,
+      "category": "app",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Caches/*com.apple.e5rt*"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "模型/运行时资源不是普通缓存",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "preserve-environment-caches",
+      "version": 1,
+      "category": "app",
+      "status": "protected",
+      "priority": 1000,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Caches/deno",
+            "Library/Caches/pypoetry",
+            "Library/Caches/org.R-project.R"
+          ],
+          "kind": "any"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "可能包含应用状态或正在链接的依赖环境",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "retain",
+      "recovery": "不适用",
+      "impact": "保留；不进入普通缓存清理",
+      "inference_cost_effect": "not_assessed_out_of_scope",
+      "evidence_sources": [
+        "product-boundary"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": ""
+    },
+    {
+      "id": "reserve-native-and-runtime",
+      "version": 1,
+      "category": "development",
+      "status": "research",
+      "priority": 550,
+      "selectors": [
+        {
+          "root": "HOME",
+          "patterns": [
+            "Library/Caches/uv",
+            "Library/Caches/ms-playwright"
+          ],
+          "kind": "directory"
+        }
+      ],
+      "selection": "contents",
+      "purpose": "专用协议拥有的域",
+      "identity_checks": [],
+      "action": "none",
+      "execution_protocol": "none",
+      "default_selected": false,
+      "disposition": "investigate",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "inference_cost_effect": "unresolved",
+      "evidence_sources": [
+        "uv-cache",
+        "playwright"
+      ],
+      "validation": {
+        "reviewed_on": "2026-10-19",
+        "basis": "document_and_source_review",
+        "application_versions_tested": [],
+        "execution_tests": "not_run_for_this_catalog"
+      },
+      "gap": "禁止通用 Library 规则兜底；只有更具体且验证通过的原生/下载规则能接管。"
+    }
+  ]
+}

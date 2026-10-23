@@ -1,0 +1,26 @@
+[
+  {
+    "id": "codex-arg0",
+    "url": "https://raw.githubusercontent.com/openai/codex/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/arg0/src/lib.rs",
+    "sha256": "c2e09deecca9af9307029e8ff62b384e314ee07f70080df249fa38e435c610ee",
+    "reviewed": "2026-10-19"
+  },
+  {
+    "id": "codex-retirement",
+    "url": "https://raw.githubusercontent.com/openai/codex/8c076942cb70fba8e5c4732c23f1faabc4aed484/codex-rs/app-server-daemon/src/release_pruning.rs",
+    "sha256": "cd41ddecaa7d69d2710137f8b9c62798ff4ae6bc700f25287368d56651598a65",
+    "reviewed": "2026-10-19"
+  },
+  {
+    "id": "cursor-installer",
+    "url": "https://cursor.com/install",
+    "sha256": "9b70b142b7bbd56d5d75c2575279b63c884178f8f8e6862b4f41c09afcf6c8a2",
+    "reviewed": "2026-10-19"
+  },
+  {
+    "id": "puppeteer-cache",
+    "url": "https://raw.githubusercontent.com/puppeteer/puppeteer/main/packages/browsers/src/Cache.ts",
+    "sha256": "9e5094147d221faece26a570f9edfdd2d58550553671d76e20a30bbb85bf888d",
+    "reviewed": "2026-10-19"
+  }
+]

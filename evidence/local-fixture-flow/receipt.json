@@ -1,0 +1,33 @@
+{
+  "kind": "receipt",
+  "schema_version": 1,
+  "plan": "34a6db79431f6f6e48d1c02621c0ebf2163822aaff99697067c015718dd9a256",
+  "created": 1792378687.232887,
+  "approval": {
+    "digest": "34a6db79431f6f6e48d1c02621c0ebf2163822aaff99697067c015718dd9a256",
+    "confirmed_at": 1792378687.23178,
+    "expires": 1792378747.23178,
+    "channel": "fixture_test",
+    "proof": "1dc8dcda39a320c056b51e7c3c9205c99e06d6e50b65449128f2dd4e94259921"
+  },
+  "results": [
+    {
+      "target_id": "e8e1c7ae52409b0c20ce",
+      "path": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-3xu48nv8/home/Library/Caches/Fixture/generated-cache.bin",
+      "logical_bytes": 28672,
+      "allocated_bytes": 28672,
+      "status": "completed"
+    }
+  ],
+  "target_processed_logical_bytes": 28672,
+  "residual_inventory_logical_bytes": 0,
+  "volumes": {
+    "16777233": {
+      "path": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-3xu48nv8/home/Library/Caches/Fixture",
+      "free_before": 26495610880,
+      "free_after": 26495635456,
+      "free_delta": 24576
+    }
+  },
+  "space_note": "卷空闲变化含并发写入、开放句柄和快照影响，不等于删除量。"
+}

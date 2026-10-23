@@ -1,0 +1,462 @@
+{
+  "elapsed_seconds": 8.78672233299585,
+  "complete": true,
+  "discovery_complete": true,
+  "measurement_complete": true,
+  "entries": 61561,
+  "targets": 1976,
+  "selected_targets": 164,
+  "selected_bytes": 2309117968,
+  "errors": [],
+  "coverage": [
+    {
+      "rule": "macos-user-cache",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 84,
+      "phase": "measurement"
+    },
+    {
+      "rule": "macos-user-log",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 78,
+      "phase": "measurement"
+    },
+    {
+      "rule": "sandbox-cache",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 749,
+      "phase": "measurement"
+    },
+    {
+      "rule": "sandbox-log",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 748,
+      "phase": "measurement"
+    },
+    {
+      "rule": "group-cache",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 156,
+      "phase": "measurement"
+    },
+    {
+      "rule": "group-log",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 2,
+      "phase": "measurement"
+    },
+    {
+      "rule": "app-render-cache",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 6,
+      "phase": "measurement"
+    },
+    {
+      "rule": "ai-render-cache",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 13,
+      "phase": "measurement"
+    },
+    {
+      "rule": "editor-code-cache",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "editor-vsix-download",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "ai-editor-extra-cache",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 2,
+      "phase": "measurement"
+    },
+    {
+      "rule": "editor-log",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "ai-support-log",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 2,
+      "phase": "measurement"
+    },
+    {
+      "rule": "browser-profile-cache",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 21,
+      "phase": "measurement"
+    },
+    {
+      "rule": "browser-root-shader",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 3,
+      "phase": "measurement"
+    },
+    {
+      "rule": "firefox-support-cache",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "design-media-cache",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "support-unreviewed-leaf",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 40,
+      "phase": "measurement"
+    },
+    {
+      "rule": "codex-legacy-tui-log",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "codex-other-log",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "codex-model-catalog",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "codex-shell-snapshots",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "codex-arg0",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "matched",
+      "matches": 4,
+      "phase": "measurement"
+    },
+    {
+      "rule": "codex-daemon-releases",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "codex-standalone-releases",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "codex-daemon-staging",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "codex-desktop-runtime-staging",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 3,
+      "phase": "measurement"
+    },
+    {
+      "rule": "claude-debug-log",
+      "root": "CLAUDE_HOME",
+      "path": "/Users/liyang/.claude",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "claude-old-native",
+      "root": "CLAUDE_VERSIONS",
+      "path": "/Users/liyang/.local/share/claude/versions",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "cursor-worker-versions",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 10,
+      "phase": "measurement"
+    },
+    {
+      "rule": "cursor-cli-versions",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "next-build-cache",
+      "root": "NEXT_DIST",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "cargo-incremental",
+      "root": "CARGO_BUILD",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "python-bytecode",
+      "root": "PROJECT",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "pytest-core-cache",
+      "root": "PYTEST_CACHE",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "pytest-plugin-cache",
+      "root": "PYTEST_CACHE",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "ruff-cache",
+      "root": "RUFF_CACHE",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "npm-content-cache",
+      "root": "NPM_CACHE",
+      "path": "/Users/liyang/.npm",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "npm-npx-cache",
+      "root": "NPM_CACHE",
+      "path": "/Users/liyang/.npm",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "npm-diagnostic-log",
+      "root": "NPM_CACHE",
+      "path": "/Users/liyang/.npm",
+      "status": "matched",
+      "matches": 11,
+      "phase": "measurement"
+    },
+    {
+      "rule": "uv-native-cache",
+      "root": "UV_CACHE",
+      "path": "/Users/liyang/.cache/uv",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "playwright-download",
+      "root": "PLAYWRIGHT_CACHE",
+      "path": "/Users/liyang/Library/Caches/ms-playwright",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "puppeteer-download",
+      "root": "PUPPETEER_CACHE",
+      "path": "/Users/liyang/.cache/puppeteer",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "preserve-codex-state",
+      "root": "CODEX_HOME",
+      "path": "/Users/liyang/.codex",
+      "status": "matched",
+      "matches": 20,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-claude-state",
+      "root": "CLAUDE_HOME",
+      "path": "/Users/liyang/.claude",
+      "status": "matched",
+      "matches": 8,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-primary-runtime",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-editor-state",
+      "root": "SUPPORT",
+      "path": "/Users/liyang/Library/Application Support",
+      "status": "matched",
+      "matches": 24,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-home-state",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 5,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-project-inputs",
+      "root": "PROJECT",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "preserve-next-data-cache",
+      "root": "NEXT_DIST",
+      "path": null,
+      "status": "not_requested",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "preserve-audit",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-sync-state",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-service-state",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "preserve-model-bundles",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "absent",
+      "matches": 0,
+      "phase": "discovery"
+    },
+    {
+      "rule": "preserve-environment-caches",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    },
+    {
+      "rule": "reserve-native-and-runtime",
+      "root": "HOME",
+      "path": "/Users/liyang",
+      "status": "matched",
+      "matches": 1,
+      "phase": "measurement"
+    }
+  ],
+  "real_cache_deleted": false
+}

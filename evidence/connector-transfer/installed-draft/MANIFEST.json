@@ -1,0 +1,32 @@
+{
+  "version": "3.0.0-rc.1",
+  "files": {
+    "ACCEPTANCE.zh-CN.md": "a0ebabfb26f32ba69791a3980aff453682e8fc27b18d3876c12725265944f8c3",
+    "COVERAGE.zh-CN.md": "53476de8542ddb888208f45f99ea4d84d58d857fc981077a01fc671b778de135",
+    "INSTALL.zh-CN.md": "ed4847674a4ec563ea0d15a46738f47e788523a1b7ba56a0b32cd3a5d9d4fd78",
+    "SKILL.md": "030721985db893a354c222e27fa778cc10abb8fd33fa5c46f604d641ed12c3d2",
+    "assets/report.html": "ff45772249e3bc3fbcb1e985c673a4ae88ebc435db3e7add07b2a047ef3d7f03",
+    "rules/RULES.md": "0a2b8da05fb32f797cab4a78af3077338c9a590ec6bb00e10aaa1841109f7f1d",
+    "rules/SOURCES.md": "338004b08465d3624e329408d1594e4e873773a900f3e1abc05ff0f753da424e",
+    "rules/catalog.json": "5116e0c7e9a575f676b7db70c87bcbc07b0411ebbaed0a4612bd51852d3dc4a3",
+    "rules/render_reference.py": "93ab07ab3e493ccc5c31aa60f53458868cf6269420c2e43c32a6ad7b2cbb6a45",
+    "scripts/maclean.py": "9b4ce334db51af1064f4ad18eb1942a27d9896e7db01d246349d34c94ea229aa",
+    "scripts/maclean_core/__init__.py": "682bb08a15b34a16f6c16b6ad43a546d4a537abeb65816f5a6087f8c0129e655",
+    "scripts/maclean_core/fs.py": "f0c422c48b2f43ba613fd4c691552e8f3d281a78f53932e30d6b7cf5462e9636",
+    "scripts/maclean_core/native.py": "6f1e062fecf96775cd53f6f051242b6e72cf0e9ae104409f54fa95a525bd7197",
+    "scripts/maclean_core/probes.py": "32c468429a617e874232aeb704aeda7ce56e8e3334dcb7bd74c4d7ee002ee6bb",
+    "scripts/maclean_core/report.py": "e562e3bd562feae5a71999d7cb0167b4b8884a3af2ad34c8c841caa36b21b6ae",
+    "scripts/maclean_core/rules.py": "f1c425eff8f5876ed9ed04e5930073710ab1c3c9a37211822bdb8c6803104671",
+    "scripts/maclean_core/runtime.py": "123fb165f1ff47d211b444174119e80d7cd69f2687516cd9d06b7e0daa3c9f99",
+    "scripts/maclean_core/scanner.py": "520bb27ee81cc1afa4c40f7e80448d78684a4a0389e093176bea81c116f8a357",
+    "scripts/maclean_core/workflow.py": "f7c0a593ad0d02370eeb230f884f82ce06866ac1760bac02396ecfa7fad519cf",
+    "scripts/transport.py": "0dee8a9ab73dcf76e73ca5392ff61eb9ca28c3f5e9e8aa1e93ea4ba7dd85bf27",
+    "validation/baseline.json": "66fdbf11c7c42b40e64193b1e744ee3c8ac92ad4b6dd073e51753642c1627fbf",
+    "validation/human-connector-result.json": "73b7b8714b4171b96ea7da95888547f9a8fe20de624543127358547b709b630a",
+    "validation/human-local-result.json": "4f41011c74297d42f3566284067cc1070bc30fa25ac9d36148c26d49f750e21a",
+    "validation/native-wait-limit.json": "fe0a65a3ea5f20358679b57b40e85e000b9bb0fc8d61a282eab8e0d6706ca632",
+    "validation/report-320-light-dark.png": "575a1be95409b586687f355d64bf0679944fcca0f9a8cf09d1a51f453be0c4ab",
+    "validation/skill-validation.txt": "db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0",
+    "validation/tests.log": "1f95ae261758f5d792a0cbadb33ed4c0e8c8d05a839550b680e43d65ed942c49"
+  }
+}

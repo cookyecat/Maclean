@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "name": "maclean-scan-catalog",
+  "version": "1.0.0",
+  "kind": "development_reference_not_installable_skill",
+  "files": {
+    "README.zh-CN.md": {
+      "sha256": "23dcdc2c0ad800e179dd1fb80721982e2c4564c26677c8afe6e5e1893d484d31",
+      "bytes": 23914
+    },
+    "catalog.json": {
+      "sha256": "710d1eca7de95c56d795d6dd0e0155bf01c14c74f41c20dfea0840c53e4c40b9",
+      "bytes": 110059
+    },
+    "RULES.md": {
+      "sha256": "e57677f88bc518780d52844faa15791f0f8bead5cccb106ff4df1a93a2e28418",
+      "bytes": 82611
+    },
+    "SOURCES.md": {
+      "sha256": "f9df8b9a247a6bcb01539b26ee7afce0ac2601e500d797866d25d1e556ea55c2",
+      "bytes": 9293
+    },
+    "cases.json": {
+      "sha256": "5a490d91e4bd9654c902bcb0022290d3d0615d17a2003734acc50f3494353822",
+      "bytes": 49430
+    },
+    "validate_catalog.py": {
+      "sha256": "739c9c92c6cfbf136a183c5932dddc19264a188eae52d8455bd26c9105e5eaff",
+      "bytes": 10684
+    },
+    "render_reference.py": {
+      "sha256": "aeadf63cb4cc0c6fd8fd45ce2f4c5635ac9677f375e4f2a1cbfb00fd86babe12",
+      "bytes": 4290
+    },
+    "ACCEPTANCE.md": {
+      "sha256": "09248ccf5df036e8263aae6cc7585fbc61288878cbb356e040f006c9556c7066",
+      "bytes": 6128
+    },
+    "VALIDATION.json": {
+      "sha256": "66fdbf11c7c42b40e64193b1e744ee3c8ac92ad4b6dd073e51753642c1627fbf",
+      "bytes": 295
+    }
+  }
+}

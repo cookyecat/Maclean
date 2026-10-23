@@ -1,0 +1,136 @@
+{
+  "kind": "plan",
+  "schema_version": 1,
+  "created": 1792378375.245177,
+  "expires": 1792380175.245177,
+  "catalog_digest": "463261e47fad425d56176d4777edf7bd611a890ef86991ea2bfcd373adf6c9c9",
+  "roots": {
+    "HOME": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home",
+    "SUPPORT": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/Library/Application Support",
+    "CODEX_HOME": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.codex",
+    "CLAUDE_HOME": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.claude",
+    "CLAUDE_VERSIONS": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.local/share/claude/versions",
+    "NPM_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.npm",
+    "UV_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.cache/uv",
+    "PLAYWRIGHT_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/Library/Caches/ms-playwright",
+    "PUPPETEER_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.cache/puppeteer"
+  },
+  "fixture": true,
+  "actions": [
+    {
+      "id": "73fdfd859d88d8b2eaa4",
+      "path": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/Library/Caches/Fixture",
+      "rule": "macos-user-cache",
+      "rule_version": 1,
+      "protocol": "online_inventory",
+      "purpose": "用户标准应用缓存",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "files": [
+        {
+          "path": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/Library/Caches/Fixture/generated-cache.bin",
+          "identity": [
+            16777233,
+            104280790,
+            32768,
+            28672,
+            1792378375134891188,
+            1792378375134891188,
+            1
+          ],
+          "ancestors": [
+            [
+              16777233,
+              2,
+              16384
+            ],
+            [
+              16777233,
+              16925,
+              16384
+            ],
+            [
+              16777233,
+              974364,
+              16384
+            ],
+            [
+              16777233,
+              3043332,
+              16384
+            ],
+            [
+              16777233,
+              104229979,
+              16384
+            ],
+            [
+              16777233,
+              104229980,
+              16384
+            ],
+            [
+              16777233,
+              104229986,
+              16384
+            ],
+            [
+              16777233,
+              104229993,
+              16384
+            ],
+            [
+              16777233,
+              104229994,
+              16384
+            ],
+            [
+              16777233,
+              104280785,
+              16384
+            ],
+            [
+              16777233,
+              104280786,
+              16384
+            ],
+            [
+              16777233,
+              104280787,
+              16384
+            ],
+            [
+              16777233,
+              104280788,
+              16384
+            ],
+            [
+              16777233,
+              104280789,
+              16384
+            ]
+          ],
+          "logical_bytes": 28672,
+          "allocated_bytes": 28672,
+          "kind": "file"
+        }
+      ],
+      "native": null,
+      "runtime": null,
+      "project_roots": {
+        "HOME": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home",
+        "SUPPORT": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/Library/Application Support",
+        "CODEX_HOME": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.codex",
+        "CLAUDE_HOME": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.claude",
+        "CLAUDE_VERSIONS": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.local/share/claude/versions",
+        "NPM_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.npm",
+        "UV_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.cache/uv",
+        "PLAYWRIGHT_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/Library/Caches/ms-playwright",
+        "PUPPETEER_CACHE": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-ks12yz75/home/.cache/puppeteer"
+      }
+    }
+  ],
+  "pending": [],
+  "logical_bytes": 28672,
+  "software_version": "3.0.0-rc.1"
+}

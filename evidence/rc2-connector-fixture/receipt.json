@@ -1,0 +1,33 @@
+{
+  "kind": "receipt",
+  "schema_version": 1,
+  "plan": "d797ab7b840e60686475695078c3f6598dd65470b9eb083ff67d374d6161c13a",
+  "created": 1792407166.651145,
+  "approval": {
+    "digest": "d797ab7b840e60686475695078c3f6598dd65470b9eb083ff67d374d6161c13a",
+    "confirmed_at": 1792407166.64978,
+    "expires": 1792407226.649781,
+    "channel": "fixture_test",
+    "proof": "ef815d06a2014b13eccaffed21959e9db2043e4c441ebc9305531c83dfefb1ce"
+  },
+  "results": [
+    {
+      "target_id": "2a6302251260f45eb360",
+      "path": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-hh13an67/home/Library/Caches/Fixture/generated-cache.bin",
+      "logical_bytes": 28672,
+      "allocated_bytes": 28672,
+      "status": "completed"
+    }
+  ],
+  "target_processed_logical_bytes": 28672,
+  "residual_inventory_logical_bytes": 0,
+  "volumes": {
+    "16777233": {
+      "path": "/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-hh13an67/home/Library/Caches/Fixture",
+      "free_before": 20565331968,
+      "free_after": 20565356544,
+      "free_delta": 24576
+    }
+  },
+  "space_note": "卷空闲变化含并发写入、开放句柄和快照影响，不等于删除量。"
+}

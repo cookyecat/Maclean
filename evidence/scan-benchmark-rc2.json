@@ -1,0 +1,30 @@
+{
+  "fixture_files": 60001,
+  "fixture_bytes": 1920005,
+  "python": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "runs": {
+    "rc1": {
+      "elapsed_seconds": 0.027541540970560163,
+      "complete": false,
+      "selected_files": 0,
+      "selected_bytes": 0,
+      "errors": [
+        {
+          "path": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-small-files-3voolxft/Library/Caches/SmallFiles",
+          "status": "budget_exceeded",
+          "error": "budget_exceeded",
+          "continue_path": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-small-files-3voolxft/Library/Caches/SmallFiles"
+        }
+      ],
+      "entries": 50048
+    },
+    "rc2": {
+      "elapsed_seconds": 2.890874625009019,
+      "complete": true,
+      "selected_files": 60001,
+      "selected_bytes": 1920005,
+      "errors": [],
+      "entries": 60002
+    }
+  }
+}

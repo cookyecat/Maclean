@@ -1,0 +1,14 @@
+[
+  {
+    "archive": "dist/maclean-3.0.0-rc.2-source.zip",
+    "sha256": "1b23548dac179f180b5b999852ad9ef7875a6c3511615bd729dd329b74abfe6e",
+    "bytes": 377418,
+    "files": 116
+  },
+  {
+    "archive": "dist/maclean-3.0.0-rc.2.zip",
+    "sha256": "5031979f38ce7199ea60950a5e6ab221bd0aee63396401958b7a19b73a0608ef",
+    "bytes": 144560,
+    "files": 32
+  }
+]

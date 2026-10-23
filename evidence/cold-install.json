@@ -1,0 +1,27 @@
+{
+  "installed": "/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-final-install-87va75sd/skill",
+  "version": "3.0.0-rc.1",
+  "sha256": "125be279b21ed81b8ae852babc6c99ace33ef88dbb0dc7859cc51d5a7541ac7a",
+  "capabilities": {
+    "schema_version": 1,
+    "software_version": "3.0.0-rc.1",
+    "catalog_version": "1.1.0",
+    "package_digest": "ade937f506d26a3d44930f81ce5f5a7626d8c37e40dec742602ccfc9c57331d9",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.7",
+    "mac_access": true,
+    "python_supported": true,
+    "approval_channels": [
+      "macOS_native_dialog"
+    ],
+    "host_event_approval": "not_configured",
+    "tools": {
+      "uv": "/Users/liyang/.local/bin/uv",
+      "npm": "/opt/homebrew/bin/npm",
+      "git": "/opt/homebrew/bin/git",
+      "lsof": "/usr/sbin/lsof"
+    },
+    "root_binding": "pwd.getpwuid(os.getuid())"
+  },
+  "exit_code": 0
+}

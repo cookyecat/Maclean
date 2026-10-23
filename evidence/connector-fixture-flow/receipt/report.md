@@ -1,0 +1,6 @@
+# MacLean 报告
+
+记录类型：receipt
+完整扫描：不适用
+
+\{   "kind": "receipt",   "schema\_version": 1,   "plan": "156a4b0b15938163c3a0e335a1da9724e85594a138750fd2b32476f5eae5b87f",   "created": 1792348666\.596195,   "approval": \{     "digest": "156a4b0b15938163c3a0e335a1da9724e85594a138750fd2b32476f5eae5b87f",     "confirmed\_at": 1792348666\.59465,     "expires": 1792348726\.59465,     "channel": "fixture\_test",     "proof": "e1fa2c41b9b70f4c05f2ad6cb092a8f5623f7826138251784b02072537811c6f"   \},   "results": \[     \{       "target\_id": "c8d10a309b0c318a2ece",       "path": "/Users/liyang/Applications/Mac MCP Gateway\.app/Contents/Resources/runtime/core/maclean\-acceptance\-kq5hoax7/home/Library/Caches/Fixture/generated\-cache\.bin",       "logical\_bytes": 28672,       "allocated\_bytes": 28672,       "status": "completed"     \}   \],   "target\_processed\_logical\_bytes": 28672,   "residual\_inventory\_logical\_bytes": 0,   "volumes": \{     "16777233": \{       "path": "/Users/liyang/Applications/Mac MCP Gateway\.app/Contents/Resources/runtime/core/maclean\-acceptance\-kq5hoax7/home/Library/Caches/Fixture",       "free\_before": 21997740032,       "free\_after": 21997764608,       "free\_delta": 24576     \}   \},   "space\_note": "卷空闲变化含并发写入、开放句柄和快照影响，不等于删除量。" \}

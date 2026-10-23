@@ -1,0 +1,36 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; img-src 'none'"><title>MacLean 报告</title>
+<style>:root{color-scheme:light dark;font:16px system-ui;--accent:#28846d}body{margin:auto;max-width:1000px;padding:20px}h1{font-size:2rem}section,details{border:1px solid #8886;border-radius:12px;padding:16px;margin:12px 0}small{opacity:.75}pre{white-space:pre-wrap;overflow-wrap:anywhere}p,td{overflow-wrap:anywhere}button{padding:12px;border-radius:8px;cursor:pointer}label{display:block}input{margin-right:10px}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-bottom:1px solid #8884}@media(max-width:400px){body{padding:10px}td,th{padding:4px;font-size:13px}}:focus-visible{outline:3px solid var(--accent)}</style>
+<body><h1>MacLean</h1><p>固定规则 · 真实测量 · 人工批准</p><p>记录类型：receipt · 完整扫描：不适用</p><pre>{
+  &quot;kind&quot;: &quot;receipt&quot;,
+  &quot;schema_version&quot;: 1,
+  &quot;plan&quot;: &quot;156a4b0b15938163c3a0e335a1da9724e85594a138750fd2b32476f5eae5b87f&quot;,
+  &quot;created&quot;: 1792348666.596195,
+  &quot;approval&quot;: {
+    &quot;digest&quot;: &quot;156a4b0b15938163c3a0e335a1da9724e85594a138750fd2b32476f5eae5b87f&quot;,
+    &quot;confirmed_at&quot;: 1792348666.59465,
+    &quot;expires&quot;: 1792348726.59465,
+    &quot;channel&quot;: &quot;fixture_test&quot;,
+    &quot;proof&quot;: &quot;e1fa2c41b9b70f4c05f2ad6cb092a8f5623f7826138251784b02072537811c6f&quot;
+  },
+  &quot;results&quot;: [
+    {
+      &quot;target_id&quot;: &quot;c8d10a309b0c318a2ece&quot;,
+      &quot;path&quot;: &quot;/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-kq5hoax7/home/Library/Caches/Fixture/generated-cache.bin&quot;,
+      &quot;logical_bytes&quot;: 28672,
+      &quot;allocated_bytes&quot;: 28672,
+      &quot;status&quot;: &quot;completed&quot;
+    }
+  ],
+  &quot;target_processed_logical_bytes&quot;: 28672,
+  &quot;residual_inventory_logical_bytes&quot;: 0,
+  &quot;volumes&quot;: {
+    &quot;16777233&quot;: {
+      &quot;path&quot;: &quot;/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-kq5hoax7/home/Library/Caches/Fixture&quot;,
+      &quot;free_before&quot;: 21997740032,
+      &quot;free_after&quot;: 21997764608,
+      &quot;free_delta&quot;: 24576
+    }
+  },
+  &quot;space_note&quot;: &quot;卷空闲变化含并发写入、开放句柄和快照影响，不等于删除量。&quot;
+}</pre><button id="export">导出选择的目标 ID</button><p>选择文件不授予删除批准；请交给核心生成封存计划。</p>
+<script>document.getElementById('export').onclick=()=>{const ids=Array.from(document.querySelectorAll('input:checked')).map(x=>x.value);const u=URL.createObjectURL(new Blob([JSON.stringify(ids)],{type:'application/json'}));const a=document.createElement('a');a.href=u;a.download='selection.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};</script></body></html>

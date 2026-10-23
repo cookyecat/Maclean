@@ -1,0 +1,55 @@
+{
+  "installed": "/Users/liyang/Developer/MacLean/evidence/installed-rc2",
+  "version": "3.0.0-rc.2",
+  "sha256": "5031979f38ce7199ea60950a5e6ab221bd0aee63396401958b7a19b73a0608ef",
+  "capabilities": {
+    "schema_version": 1,
+    "software_version": "3.0.0-rc.2",
+    "catalog_version": "1.1.0",
+    "package_digest": "a0d7759ee01b6daea01719d022cf4b01e5b43ee190f45b0beb15635b926d7bfb",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.7",
+    "mac_access": true,
+    "python_supported": true,
+    "approval_channels": [
+      "macOS_native_dialog"
+    ],
+    "host_event_approval": "not_configured",
+    "tools": {
+      "uv": "/Users/liyang/.local/bin/uv",
+      "npm": "/opt/homebrew/bin/npm",
+      "git": "/opt/homebrew/bin/git",
+      "lsof": "/usr/sbin/lsof"
+    },
+    "root_binding": "pwd.getpwuid(os.getuid())"
+  },
+  "scan": {
+    "schema_version": 1,
+    "software_version": "3.0.0-rc.2",
+    "catalog_version": "1.1.0",
+    "package_digest": "a0d7759ee01b6daea01719d022cf4b01e5b43ee190f45b0beb15635b926d7bfb",
+    "scan_id": "8ef5e097708ca1badda505f5f554898e3afd2fe94544a6054e898b8d9db1d0df",
+    "record": "/Users/liyang/Developer/MacLean/evidence/rc2-live-state/8ef5e097708ca1badda505f5f554898e3afd2fe94544a6054e898b8d9db1d0df.json",
+    "targets": 1978,
+    "selected": 166,
+    "complete": true,
+    "discovery_complete": true,
+    "measurement_complete": true,
+    "limits": {
+      "entries_per_target": 250000,
+      "seconds_per_target": 120,
+      "seconds_total": 600
+    },
+    "entries": 61693,
+    "incomplete_targets": []
+  },
+  "elapsed_with_store_seconds": 13.645961957983673,
+  "report": {
+    "schema_version": 1,
+    "software_version": "3.0.0-rc.2",
+    "catalog_version": "1.1.0",
+    "package_digest": "a0d7759ee01b6daea01719d022cf4b01e5b43ee190f45b0beb15635b926d7bfb",
+    "html": "/Users/liyang/Developer/MacLean/evidence/rc2-live-report/report.html",
+    "markdown": "/Users/liyang/Developer/MacLean/evidence/rc2-live-report/report.md"
+  }
+}

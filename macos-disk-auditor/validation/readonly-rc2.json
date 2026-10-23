@@ -1,0 +1,17 @@
+{
+  "elapsed_seconds": 8.78672233299585,
+  "complete": true,
+  "discovery_complete": true,
+  "measurement_complete": true,
+  "entries": 61561,
+  "targets": 1976,
+  "selected_targets": 164,
+  "selected_bytes": 2309117968,
+  "errors": [],
+  "real_cache_deleted": false,
+  "settings": {
+    "seconds": 180,
+    "target_seconds": 45,
+    "entries_per_target": 250000
+  }
+}

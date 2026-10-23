@@ -1,0 +1,41 @@
+{
+  "sha256": "125be279b21ed81b8ae852babc6c99ace33ef88dbb0dc7859cc51d5a7541ac7a",
+  "install": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Process started with PID 28341 (shell: /bin/sh)\nInitial output:\n{\n  \"installed\": \"/Users/liyang/Developer/MacLean/evidence/connector-transfer/installed-final\",\n  \"version\": \"3.0.0-rc.1\",\n  \"sha256\": \"125be279b21ed81b8ae852babc6c99ace33ef88dbb0dc7859cc51d5a7541ac7a\"\n}\n\n✅ Process 28341 has finished execution"
+      }
+    ],
+    "structuredContent": null,
+    "isError": false
+  },
+  "checks": [
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Process started with PID 28375 (shell: /bin/sh)\nInitial output:\n{\n  \"schema_version\": 1,\n  \"software_version\": \"3.0.0-rc.1\",\n  \"catalog_version\": \"1.1.0\",\n  \"package_digest\": \"ade937f506d26a3d44930f81ce5f5a7626d8c37e40dec742602ccfc9c57331d9\",\n  \"platform\": \"macOS-26.5.2-arm64-64bit\",\n  \"python\": \"3.14.7\",\n  \"mac_access\": true,\n  \"python_supported\": true,\n  \"approval_channels\": [\n    \"macOS_native_dialog\"\n  ],\n  \"host_event_approval\": \"not_configured\",\n  \"tools\": {\n    \"uv\": \"/Users/liyang/.local/bin/uv\",\n    \"npm\": \"/opt/homebrew/bin/npm\",\n    \"git\": \"/opt/homebrew/bin/git\",\n    \"lsof\": \"/usr/sbin/lsof\"\n  },\n  \"root_binding\": \"pwd.getpwuid(os.getuid())\"\n}\n\n✅ Process 28375 has finished execution"
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      }
+    },
+    {
+      "status": "fulfilled",
+      "value": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Process started with PID 28386 (shell: /bin/sh)\nInitial output:\n{\"fixture\": \"/Users/liyang/Applications/Mac MCP Gateway.app/Contents/Resources/runtime/core/maclean-acceptance-o9r1_kjx\", \"plan_id\": \"c38860a548f86ce916b7caba5e0bfb92f77208669b0d04d0ca3446d712744861\", \"logical_bytes\": 28672, \"approval\": \"simulated_fixture_only\"}\n{\"package\": \"/Users/liyang/Developer/MacLean/evidence/connector-transfer/installed-final\", \"status\": \"passed\", \"approval\": \"simulated_fixture_only\", \"scan_id\": \"4f7207d9a50a02457462c5fbf92fe1e03cee804a11bf40c3e64df778d7accdce\", \"receipt_id\": \"1d2150cade5d28c76dd96d7f6eb94c43a98bcb2cac7418f85faa08e5fbb3625e\", \"deleted\": true}\n\n✅ Process 28386 has finished execution"
+          }
+        ],
+        "structuredContent": null,
+        "isError": false
+      }
+    }
+  ]
+}

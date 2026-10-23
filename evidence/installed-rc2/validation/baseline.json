@@ -1,0 +1,14 @@
+{
+  "catalog_version": "1.0.0",
+  "rules": 56,
+  "statuses": {
+    "ready": 27,
+    "research": 17,
+    "protected": 12
+  },
+  "synthetic_cases_passed": 125,
+  "rules_covered_by_expectations": 56,
+  "scope": "schema_and_synthetic_decisions_only",
+  "real_scan": false,
+  "real_cleanup": false
+}

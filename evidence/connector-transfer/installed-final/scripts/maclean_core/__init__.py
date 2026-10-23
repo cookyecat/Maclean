@@ -1,0 +1,2 @@
+"""MacLean shared, standard-library-only core."""
+VERSION = '3.0.0-rc.1'

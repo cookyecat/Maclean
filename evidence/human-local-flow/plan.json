@@ -1,0 +1,126 @@
+{
+  "kind": "plan",
+  "schema_version": 1,
+  "created": 1792378254.430753,
+  "expires": 1792380054.430753,
+  "catalog_digest": "463261e47fad425d56176d4777edf7bd611a890ef86991ea2bfcd373adf6c9c9",
+  "roots": {
+    "HOME": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home",
+    "SUPPORT": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/Library/Application Support",
+    "CODEX_HOME": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.codex",
+    "CLAUDE_HOME": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.claude",
+    "CLAUDE_VERSIONS": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.local/share/claude/versions",
+    "NPM_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.npm",
+    "UV_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.cache/uv",
+    "PLAYWRIGHT_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/Library/Caches/ms-playwright",
+    "PUPPETEER_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.cache/puppeteer"
+  },
+  "fixture": true,
+  "actions": [
+    {
+      "id": "5645e9e31b90f193d120",
+      "path": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/Library/Caches/Fixture",
+      "rule": "macos-user-cache",
+      "rule_version": 1,
+      "protocol": "online_inventory",
+      "purpose": "用户标准应用缓存",
+      "impact": "下次访问可能重建；打开句柄可能延迟释放空间",
+      "recovery": "应用或工具在本地重新生成或下载",
+      "files": [
+        {
+          "path": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/Library/Caches/Fixture/generated-cache.bin",
+          "identity": [
+            16777233,
+            104279930,
+            32768,
+            28672,
+            1792378254373938188,
+            1792378254373938188,
+            1
+          ],
+          "ancestors": [
+            [
+              16777233,
+              2,
+              16384
+            ],
+            [
+              16777233,
+              71190171,
+              16384
+            ],
+            [
+              16777233,
+              71190592,
+              16384
+            ],
+            [
+              16777233,
+              71191338,
+              16384
+            ],
+            [
+              16777233,
+              974517,
+              16384
+            ],
+            [
+              16777233,
+              974518,
+              16384
+            ],
+            [
+              16777233,
+              974521,
+              16384
+            ],
+            [
+              16777233,
+              104279925,
+              16384
+            ],
+            [
+              16777233,
+              104279926,
+              16384
+            ],
+            [
+              16777233,
+              104279927,
+              16384
+            ],
+            [
+              16777233,
+              104279928,
+              16384
+            ],
+            [
+              16777233,
+              104279929,
+              16384
+            ]
+          ],
+          "logical_bytes": 28672,
+          "allocated_bytes": 28672,
+          "kind": "file"
+        }
+      ],
+      "native": null,
+      "runtime": null,
+      "project_roots": {
+        "HOME": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home",
+        "SUPPORT": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/Library/Application Support",
+        "CODEX_HOME": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.codex",
+        "CLAUDE_HOME": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.claude",
+        "CLAUDE_VERSIONS": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.local/share/claude/versions",
+        "NPM_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.npm",
+        "UV_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.cache/uv",
+        "PLAYWRIGHT_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/Library/Caches/ms-playwright",
+        "PUPPETEER_CACHE": "/private/var/folders/qp/_qdh0v5x2t7djzt2589d64jc0000gp/T/maclean-acceptance-00ilwrou/home/.cache/puppeteer"
+      }
+    }
+  ],
+  "pending": [],
+  "logical_bytes": 28672,
+  "software_version": "3.0.0-rc.1"
+}

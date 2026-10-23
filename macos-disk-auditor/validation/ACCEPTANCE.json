@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-19",
+  "software": "3.0.0-rc.2",
+  "catalog": "1.1.0",
+  "unittest_methods": 72,
+  "tests_status": "passed",
+  "synthetic_ownership_cases": 125,
+  "benchmark": "scan-benchmark-rc2.json",
+  "readonly_scan": "readonly-rc2.json",
+  "real_cache_deleted": false,
+  "human_approval": "rc.1 evidence retained; rc.2 human flow not repeated",
+  "web_chatgpt_end_to_end": "not_verified",
+  "release_gate": "candidate_not_all_acceptance_complete"
+}

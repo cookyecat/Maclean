@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "software_version": "3.0.0-rc.1",
+  "catalog_version": "1.1.0",
+  "package_digest": "development-unsealed",
+  "scan_id": "546d397512ac8b7b974d9c98abbaf90529668ec4a3a09fe2942ed16154b98be2",
+  "record": "/Users/liyang/Developer/MacLean/evidence/live-readonly-state/546d397512ac8b7b974d9c98abbaf90529668ec4a3a09fe2942ed16154b98be2.json",
+  "targets": 2,
+  "selected": 2,
+  "complete": true
+}
